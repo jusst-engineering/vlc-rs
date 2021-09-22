@@ -85,6 +85,12 @@ impl Media {
         }
     }
 
+    pub fn add_option(&self, value: &str) {
+        unsafe{
+            sys::libvlc_media_add_option(self.ptr, to_cstr(value).as_ptr());
+        }
+    }
+
     /// Set the meta of the media.
     /// (This function will not save the meta, call save_meta in order to save the meta)
     pub fn set_meta(&self, meta: Meta, value: &str) {
