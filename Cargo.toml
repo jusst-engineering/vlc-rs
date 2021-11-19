@@ -5,7 +5,8 @@ authors = ["T. Okubo <t.okubo.rx78+github@gmail.com>"]
 
 description = "Rust bindings for libVLC media framework."
 keywords = ["libVLC", "bindings"]
-repository = "https://github.com/garkimasera/vlc-rs"
+repository = "https://code.videolan.org/videolan/vlc-rs"
+homepage = "https://code.videolan.org/videolan/vlc-rs"
 license = "MIT"
 readme = "README.md"
 edition = "2018"
