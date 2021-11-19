@@ -2,7 +2,7 @@ stages:
     - build
 
 variables:
-    VLC_UBUNTU_IMAGE: registry.videolan.org/vlc-rs-libvlc-stable-ubuntu:20211102174954
+    VLC_UBUNTU_IMAGE: registry.videolan.org/vlc-rs-libvlc-stable-ubuntu:20211117143343
 
 vlc-rs-build:
     tags:
@@ -13,5 +13,5 @@ vlc-rs-build:
         name: $VLC_UBUNTU_IMAGE
 
     script:
-        - . $HOME/.cargo/env
+        - . $CARGO_HOME/env
         - cargo build --all
