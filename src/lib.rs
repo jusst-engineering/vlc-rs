@@ -4,23 +4,23 @@
 
 extern crate libc;
 
-mod tools;
-mod core;
-mod media;
-mod media_player;
-mod media_list;
-mod media_library;
-mod enums;
-mod video;
 mod audio;
+mod core;
+mod enums;
+mod media;
+mod media_library;
+mod media_list;
+mod media_player;
+mod tools;
+mod video;
 mod vlm;
 
-pub use crate::enums::*;
-pub use crate::core::*;
-pub use crate::media::*;
-pub use crate::media_player::*;
-pub use crate::media_list::*;
-pub use crate::media_library::*;
-pub use crate::video::*;
 pub use crate::audio::*;
+pub use crate::core::*;
+pub use crate::enums::*;
+pub use crate::media::*;
+pub use crate::media_library::*;
+pub use crate::media_list::*;
+pub use crate::media_player::*;
+pub use crate::video::*;
 pub use crate::vlm::*;
