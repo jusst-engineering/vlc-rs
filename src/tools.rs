@@ -41,3 +41,204 @@ pub fn path_to_cstr(path: &Path) -> Result<CString, NulError> {
 
     Ok(path)
 }
+
+/// Defines a module with all necessary structures to easily handle a C linked list
+macro_rules! linked_list_iter {
+    (
+      $c_type:ident,
+      $name:ident,
+      {
+        $($(#[$field_meta:meta])*
+        $field_vis:vis $field_name:ident: ($field_type:ty, $field_b_type:ty)),* $(,)+
+      }
+    ) => {
+      paste::item! {
+        mod $name {
+          use std::borrow::Cow;
+          use std::marker::PhantomData;
+          use crate::tools::from_cstr_ref;
+
+          use vlc_sys::[<$c_type _t>];
+          use vlc_sys::[<$c_type _list_release>];
+  
+          #[derive(Clone, PartialEq, Eq, Hash, Debug)]
+          pub struct Item {
+            $(
+              $(#[$field_meta:meta])*
+              $field_vis $field_name : Option<$field_type>,
+            )*
+          }
+  
+          #[derive(Clone, PartialEq, Eq, Hash, Debug)]
+          pub struct ItemRef<'a> {
+            $(
+              $(#[$field_meta:meta])*
+              $field_vis $field_name : Option<Cow<'a, $field_b_type>>,
+            )*
+          }
+  
+          impl<'a> ItemRef<'a> {
+            /// Convert to owned strings.
+            pub fn into_owned(&'a self) -> Item {
+              Item {
+                $($field_name: self.$field_name.as_ref().map(|s| s.clone().into_owned()),)*
+              }
+            }
+          }
+  
+          pub struct ListIter<'a> {
+            ptr: *mut [<$c_type _t>],
+            _phantomdata: PhantomData<&'a [<$c_type _t>]>,
+          }
+  
+          impl<'a> Iterator for ListIter<'a> {
+            type Item = ItemRef<'a>;
+  
+            fn next(&mut self) -> Option<Self::Item> {
+              unsafe {
+                if self.ptr.is_null() {
+                  return None;
+                }
+                let p = self.ptr;
+                self.ptr = (*p).p_next;
+                Some(ItemRef {
+                  $($field_name: from_cstr_ref((*p).[<psz_ $field_name>]),)*
+                })
+              }
+            }
+          }
+  
+          pub struct List {
+            ptr: *mut [<$c_type _t>]
+          }
+  
+          impl List {
+            pub fn new(ptr: *mut [<$c_type _t>]) -> List {
+              Self { ptr }
+            }
+  
+            /// Returns raw pointer
+            pub fn raw(&self) -> *mut [<$c_type _t>] {
+              self.ptr
+            }
+          }
+  
+          impl Drop for List {
+            fn drop(&mut self) {
+              unsafe{ [<$c_type _list_release>](self.ptr) };
+            }
+          }
+  
+          impl<'a> IntoIterator for &'a List {
+            type Item = ItemRef<'a>;
+            type IntoIter = ListIter<'a>;
+  
+            fn into_iter(self) -> Self::IntoIter {
+              ListIter{ptr: self.ptr, _phantomdata: PhantomData}
+            }
+          }
+        }
+  
+        // backward compatibility types
+        pub type [<$name:camel>] = $name::Item;
+        pub type [<$name:camel Ref>]<'a> = $name::ItemRef<'a>;
+        pub type [<$name:camel List>] = $name::List;
+        pub type [<$name:camel ListIter>]<'a> = $name::ListIter<'a>;
+      }
+    }
+  }
+  
+  /*
+  macro_rules! linked_list_iter {
+    (
+      $namespace:path,
+      $c_type: ident,
+      $name: ident,
+      {
+        $($(#[$field_meta:meta])*
+        $field_vis:vis $field_name:ident: ($field_type:ty, $field_b_type:ty)),* $(,)+
+      }
+    ) => {
+      paste::item! {
+        use std::marker::PhantomData;
+        use crate::$namespace::[<$c_type _t>];
+        use crate::$namespace::[<$c_type _list_release>];
+  
+        #[derive(Clone, PartialEq, Eq, Hash, Debug)]
+        pub struct $name {
+          $(
+            $(#[$field_meta:meta])*
+            $field_vis $field_name : Option<$field_type>,
+          )*
+        }
+  
+        #[derive(Clone, PartialEq, Eq, Hash, Debug)]
+        pub struct [<$name Ref>]<'a> {
+          $(
+            $(#[$field_meta:meta])*
+            $field_vis $field_name : Option<Cow<'a, $field_b_type>>,
+          )*
+        }
+  
+        impl<'a> [<$name Ref>]<'a> {
+          /// Convert to owned strings.
+          pub fn into_owned(&'a self) -> $name {
+            $name {
+              $($field_name: self.$field_name.as_ref().map(|s| s.clone().into_owned()),)*
+            }
+          }
+        }
+  
+        pub struct [<$name ListIter>]<'a> {
+          ptr: *mut [<$c_type _t>],
+          _phantomdata: PhantomData<&'a [<$c_type _t>]>,
+        }
+  
+        impl<'a> Iterator for [<$name ListIter>]<'a> {
+          type Item = [<$name Ref>]<'a>;
+  
+          fn next(&mut self) -> Option<Self::Item> {
+            unsafe {
+              if self.ptr.is_null() {
+                return None;
+              }
+              let p = self.ptr;
+              self.ptr = (*p).p_next;
+              Some([<$name Ref>] {
+                $($field_name: from_cstr_ref((*p).[<psz_ $field_name>]),)*
+              })
+            }
+          }
+        }
+  
+        pub struct [<$name List>] {
+          ptr: *mut [<$c_type _t>]
+        }
+  
+        impl [<$name List>] {
+          /// Returns raw pointer
+          pub fn raw(&self) -> *mut [<$c_type _t>] {
+            self.ptr
+          }
+        }
+  
+        impl Drop for [<$name List>] {
+          fn drop(&mut self) {
+            unsafe{ [<$c_type _list_release>](self.ptr) };
+          }
+        }
+  
+        impl<'a> IntoIterator for &'a [<$name List>] {
+          type Item = [<$name Ref>]<'a>;
+          type IntoIter = [<$name ListIter>]<'a>;
+  
+          fn into_iter(self) -> Self::IntoIter {
+            [<$name ListIter>]{ptr: self.ptr, _phantomdata: PhantomData}
+          }
+        }
+      }
+    }
+  }
+  */
+  
+  pub(crate) use linked_list_iter;

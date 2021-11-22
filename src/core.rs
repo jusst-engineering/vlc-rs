@@ -3,14 +3,13 @@
 // Licensed under the MIT license, see the LICENSE file.
 
 use crate::enums::*;
-use crate::tools::{from_cstr, from_cstr_ref, to_cstr};
+use crate::tools::{from_cstr, from_cstr_ref, linked_list_iter, to_cstr};
 use libc::{c_char, c_int, c_void};
 use std::borrow::Cow;
 use std::convert::TryInto;
 use std::ffi::CString;
 use std::fmt;
 use std::i32;
-use std::marker::PhantomData;
 use std::ptr;
 use vlc_sys as sys;
 
@@ -24,6 +23,36 @@ impl fmt::Display for InternalError {
 }
 
 impl std::error::Error for InternalError {}
+
+
+linked_list_iter!(
+    libvlc_module_description, // C raw type
+    module_description, // Rust base struct name
+    {
+      name: (String, str),
+      shortname: (String, str),
+      longname: (String, str),
+      help: (String, str),
+    } // fields
+);
+
+linked_list_iter!(
+    libvlc_audio_output, // C raw type
+    audio_output, // Rust base struct name
+    {
+        name: (String, str),
+        description: (String, str),
+    } // fields
+);
+
+linked_list_iter!(
+    libvlc_audio_output_device, // C raw type
+    audio_output_device, // Rust base struct name
+    {
+        device: (String, str),
+        description: (String, str),
+    } // fields
+);
 
 /// Retrieve libvlc version.
 pub fn version() -> String {
@@ -131,7 +160,7 @@ impl Instance {
             if p.is_null() {
                 None
             } else {
-                Some(ModuleDescriptionList { ptr: p })
+                Some(ModuleDescriptionList::new(p))
             }
         }
     }
@@ -143,7 +172,7 @@ impl Instance {
             if p.is_null() {
                 None
             } else {
-                Some(ModuleDescriptionList { ptr: p })
+                Some(ModuleDescriptionList::new(p))
             }
         }
     }
@@ -201,92 +230,6 @@ unsafe extern "C" fn logging_cb(
         Log { ptr: ctx },
         from_cstr_ref(buf.as_ptr()).unwrap(),
     );
-}
-
-/// List of module description.
-pub struct ModuleDescriptionList {
-    ptr: *mut sys::libvlc_module_description_t,
-}
-
-impl ModuleDescriptionList {
-    /// Returns raw pointer
-    pub fn raw(&self) -> *mut sys::libvlc_module_description_t {
-        self.ptr
-    }
-}
-
-impl Drop for ModuleDescriptionList {
-    fn drop(&mut self) {
-        unsafe { sys::libvlc_module_description_list_release(self.ptr) };
-    }
-}
-
-impl<'a> IntoIterator for &'a ModuleDescriptionList {
-    type Item = ModuleDescriptionRef<'a>;
-    type IntoIter = ModuleDescriptionListIter<'a>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        ModuleDescriptionListIter {
-            ptr: self.ptr,
-            _phantomdata: PhantomData,
-        }
-    }
-}
-
-pub struct ModuleDescriptionListIter<'a> {
-    ptr: *mut sys::libvlc_module_description_t,
-    _phantomdata: PhantomData<&'a sys::libvlc_module_description_t>,
-}
-
-/// Description of a module.
-/// The strings are owned.
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct ModuleDescription {
-    pub name: Option<String>,
-    pub shortname: Option<String>,
-    pub longname: Option<String>,
-    pub help: Option<String>,
-}
-
-/// Description of a module.
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct ModuleDescriptionRef<'a> {
-    pub name: Option<Cow<'a, str>>,
-    pub shortname: Option<Cow<'a, str>>,
-    pub longname: Option<Cow<'a, str>>,
-    pub help: Option<Cow<'a, str>>,
-}
-
-impl<'a> Iterator for ModuleDescriptionListIter<'a> {
-    type Item = ModuleDescriptionRef<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.ptr.is_null() {
-                return None;
-            }
-            let p = self.ptr;
-            self.ptr = (*p).p_next;
-            Some(ModuleDescriptionRef {
-                name: from_cstr_ref((*p).psz_name),
-                shortname: from_cstr_ref((*p).psz_shortname),
-                longname: from_cstr_ref((*p).psz_longname),
-                help: from_cstr_ref((*p).psz_help),
-            })
-        }
-    }
-}
-
-impl<'a> ModuleDescriptionRef<'a> {
-    /// Convert to owned strings.
-    pub fn into_owned(&'a self) -> ModuleDescription {
-        ModuleDescription {
-            name: self.name.as_ref().map(|s| s.clone().into_owned()),
-            shortname: self.shortname.as_ref().map(|s| s.clone().into_owned()),
-            longname: self.name.as_ref().map(|s| s.clone().into_owned()),
-            help: self.shortname.as_ref().map(|s| s.clone().into_owned()),
-        }
-    }
 }
 
 pub fn errmsg() -> Option<String> {
