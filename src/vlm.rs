@@ -116,9 +116,10 @@ impl Vlm for Instance {
         let opts_c: Vec<CString>;
         let enabled = if enabled { 1 } else { 0 };
         if let Some(vec) = options {
-            opts_c = vec.into_iter()
-                        .map(|x| CString::new(x).expect("Error: Unexpected null byte"))
-                        .collect();
+            opts_c = vec
+                .into_iter()
+                .map(|x| CString::new(x).expect("Error: Unexpected null byte"))
+                .collect();
             opts_c_ptr = opts_c.iter().map(|x| x.as_ptr()).collect();
         } else {
             opts_c_ptr = Vec::new();
