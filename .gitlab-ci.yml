@@ -1,0 +1,17 @@
+stages:
+    - build
+
+variables:
+    VLC_UBUNTU_IMAGE: registry.videolan.org/vlc-rs-libvlc-stable-ubuntu:20211117143343
+
+vlc-rs-build:
+    tags:
+        - docker
+        - amd64
+    stage: build
+    image:
+        name: $VLC_UBUNTU_IMAGE
+
+    script:
+        - . $CARGO_HOME/env
+        - cargo build --all
