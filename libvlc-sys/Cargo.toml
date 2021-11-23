@@ -6,7 +6,9 @@ authors = ["T. Okubo <t.okubo.rx78+devel@gmail.com>"]
 description = "libVLC C API"
 keywords = ["libVLC", "bindings"]
 categories = ["external-ffi-bindings", "multimedia"]
-repository = "https://github.com/garkimasera/vlc-rs"
+documentation = "https://docs.rs/vlc-rs"
+repository = "https://code.videolan.org/videolan/vlc-rs"
+homepage = "https://code.videolan.org/videolan/vlc-rs"
 license = "MIT"
 edition = "2018"
 build = "build.rs"
@@ -19,5 +21,5 @@ crate-type = ["rlib"]
 libc = "0.2"
 
 [build-dependencies]
-bindgen = "0.52"
+bindgen = "0.59"
 pkg-config = "0.3"
