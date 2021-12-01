@@ -45,6 +45,7 @@ impl MediaPlayerAudioEx for MediaPlayer {
             }
         }
     }
+
     fn get_audio_track_description(&self) -> Option<Vec<TrackDescription>> {
         unsafe {
             let p0 = sys::libvlc_audio_get_track_description(self.ptr);

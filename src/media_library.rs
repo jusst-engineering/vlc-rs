@@ -3,6 +3,7 @@
 // Licensed under the MIT license, see the LICENSE file.
 
 use crate::{Instance, InternalError, MediaList};
+use std::fmt;
 use vlc_sys as sys;
 
 pub struct MediaLibrary {
@@ -11,13 +12,13 @@ pub struct MediaLibrary {
 
 impl MediaLibrary {
     /// Create an new Media Library object.
-    pub fn new(instance: &Instance) -> Option<MediaLibrary> {
+    pub fn new(instance: &Instance) -> Result<MediaLibrary, InternalError> {
         unsafe {
             let p = sys::libvlc_media_library_new(instance.ptr);
             if p.is_null() {
-                None
+                Err(InternalError)
             } else {
-                Some(MediaLibrary { ptr: p })
+                Ok(MediaLibrary { ptr: p })
             }
         }
     }

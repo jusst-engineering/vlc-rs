@@ -53,7 +53,7 @@ impl Instance {
     /// Create and initialize a libvlc instance with specified args.
     /// Note: args.len() has to be less or equal to i32::MAX
     /// Note: libvlc discourages using arguments as these are not guaranteed to be stable between different versions of libvlc
-    pub fn with_args(args: Option<Vec<String>>) -> Option<Instance> {
+    pub fn with_args(args: Option<Vec<String>>) -> Result<Instance, InternalError> {
         let args_c_ptr: Vec<*const c_char>;
         let args_c: Vec<CString>;
         if let Some(argv) = args {
@@ -74,15 +74,15 @@ impl Instance {
             };
 
             if p.is_null() {
-                return None;
+                Err(InternalError)
+            } else {
+                Ok(Instance { ptr: p })
             }
-
-            Some(Instance { ptr: p })
         }
     }
 
     /// Create and initialize a libvlc instance.
-    pub fn new() -> Option<Instance> {
+    pub fn new() -> Result<Instance, InternalError> {
         Instance::with_args(None)
     }
 
@@ -125,25 +125,25 @@ impl Instance {
     }
 
     /// Returns a list of audio filters that are available.
-    pub fn audio_filter_list_get(&self) -> Option<ModuleDescriptionList> {
+    pub fn audio_filter_list_get(&self) -> Result<ModuleDescriptionList, InternalError> {
         unsafe {
             let p = sys::libvlc_audio_filter_list_get(self.ptr);
             if p.is_null() {
-                None
+                Err(InternalError)
             } else {
-                Some(ModuleDescriptionList { ptr: p })
+                Ok(ModuleDescriptionList { ptr: p })
             }
         }
     }
 
     /// Returns a list of video filters that are available.
-    pub fn video_filter_list_get(&self) -> Option<ModuleDescriptionList> {
+    pub fn video_filter_list_get(&self) -> Result<ModuleDescriptionList, InternalError> {
         unsafe {
             let p = sys::libvlc_video_filter_list_get(self.ptr);
             if p.is_null() {
-                None
+                Err(InternalError)
             } else {
-                Some(ModuleDescriptionList { ptr: p })
+                Ok(ModuleDescriptionList { ptr: p })
             }
         }
     }

@@ -11,13 +11,13 @@ pub struct MediaList {
 
 impl MediaList {
     /// Create an empty media list.
-    pub fn new(instance: &Instance) -> Option<MediaList> {
+    pub fn new(instance: &Instance) -> Result<MediaList, InternalError> {
         unsafe {
             let p = sys::libvlc_media_list_new(instance.ptr);
             if p.is_null() {
-                None
+                Err(InternalError)
             } else {
-                Some(MediaList { ptr: p })
+                Ok(MediaList { ptr: p })
             }
         }
     }
@@ -45,6 +45,7 @@ impl MediaList {
 
     /// Add media instance to media list.
     /// The MediaList::lock should be held upon entering this function.
+    // TODO: use specific error type since documentation says "-1 if the media list is read-only"
     pub fn add_media(&self, md: &Media) -> Result<(), InternalError> {
         unsafe {
             if sys::libvlc_media_list_add_media(self.ptr, md.ptr) == 0 {
