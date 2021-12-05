@@ -3,7 +3,6 @@
 // Licensed under the MIT license, see the LICENSE file.
 
 use crate::{Instance, InternalError, MediaList};
-use std::fmt;
 use vlc_sys as sys;
 
 pub struct MediaLibrary {
