@@ -325,15 +325,8 @@ pub struct EventManager<'a> {
 
 impl<'a> EventManager<'a> {
 
-    pub fn detach(&self, event_type: EventType, registered_callback: *mut c_void) -> Result<(),()> {
-        let result =  unsafe {
-            sys::libvlc_event_detach(self.ptr, event_type as i32, event_manager_callback, registered_callback)
-        };
-        if result == 0 {
-            Ok(())
-        } else {
-            Err(())
-        }
+    pub fn detach(&self, event_type: EventType, registered_callback: *mut c_void) {
+        unsafe { sys::libvlc_event_detach(self.ptr, event_type as i32, Some(event_manager_callback), registered_callback) }
     }
 
     pub fn attach<F>(&self, event_type: EventType, callback: F) -> Result<*mut c_void, ()>
