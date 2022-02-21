@@ -1,6 +1,8 @@
 fn main() {
     #[cfg(target_os = "windows")]
     windows::link_vlc();
+
+    println!("cargo:rustc-link-lib=vlc");
 }
 
 #[cfg(target_os = "windows")]
