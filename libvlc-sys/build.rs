@@ -1,5 +1,6 @@
 use std::env;
 use std::path::PathBuf;
+use pkg_config;
 
 #[cfg(feature = "bindgen")]
 fn generate_bindings() {
@@ -44,6 +45,12 @@ fn copy_pregenerated_bindings()
         out_path.join("bindings.rs"),
     )
     .expect("Couldn't find pregenerated bindings!");
+}
+
+fn link_vlc_with_pkgconfig() -> Result<pkg_config::Library, pkg_config::Error> {
+    pkg_config::Config::new()
+        .print_system_libs(false)
+        .probe("libvlc")
 }
 
 #[cfg(target_os = "windows")]
@@ -164,8 +171,13 @@ fn main() {
     copy_pregenerated_bindings();
 
     // Link
-    #[cfg(target_os = "windows")]
-    windows::link_vlc();
+    if let Err(err) = link_vlc_with_pkgconfig() {
+        #[cfg(target_os = "windows")]
+        windows::link_vlc();
+
+        #[cfg(not(target_os = "windows"))]
+        panic!("libvlc not found: {:?}", err);
+    }
 
     println!("cargo:rustc-link-lib=vlc");
 }
