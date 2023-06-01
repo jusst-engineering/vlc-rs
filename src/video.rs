@@ -28,6 +28,20 @@ pub trait MediaPlayerVideoEx {
     fn set_adjust_int(&self, option: VideoAdjustOption, value: i32);
     fn get_adjust_float(&self, option: VideoAdjustOption) -> f32;
     fn set_adjust_float(&self, option: VideoAdjustOption, value: f32);
+
+    /// Get the current teletext page.
+    fn get_teletext(&self) -> i32;
+
+    /// Set the teletext page to display.
+    ///
+    /// This function can also be used to send a teletext key.
+    ///
+    /// # Arguments
+    ///
+    /// * `page` - If set to 0, teletext is disabled.
+    ///            If set between 1 and 999, the according teletext page is loaded.
+    ///            Also supports the values of TeletextKey enum for following special links.
+    fn set_teletext(&self, page: u32);
 }
 
 impl MediaPlayerVideoEx for MediaPlayer {
@@ -120,5 +134,15 @@ impl MediaPlayerVideoEx for MediaPlayer {
     }
     fn set_adjust_float(&self, option: VideoAdjustOption, value: f32) {
         unsafe{ sys::libvlc_video_set_adjust_float(self.ptr, option as u32, value); }
+    }
+
+    fn get_teletext(&self) -> i32 {
+        unsafe { sys::libvlc_video_get_teletext(self.ptr) }
+    }
+
+    fn set_teletext(&self, page: u32) {
+        unsafe {
+            sys::libvlc_video_set_teletext(self.ptr, page as i32);
+        }
     }
 }
