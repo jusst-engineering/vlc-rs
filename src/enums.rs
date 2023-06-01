@@ -170,3 +170,12 @@ define_enum!(
     VlmMediaInstanceStatusEnd = libvlc_event_e_libvlc_VlmMediaInstanceStatusEnd,
     VlmMediaInstanceStatusError = libvlc_event_e_libvlc_VlmMediaInstanceStatusError,
 );
+
+define_enum!(
+    TeletextKey, libvlc_teletext_key_t;
+    Red = libvlc_teletext_key_t_libvlc_teletext_key_red,
+    Green = libvlc_teletext_key_t_libvlc_teletext_key_green,
+    Yellow = libvlc_teletext_key_t_libvlc_teletext_key_yellow,
+    Blue = libvlc_teletext_key_t_libvlc_teletext_key_blue,
+    Index = libvlc_teletext_key_t_libvlc_teletext_key_index,
+);
