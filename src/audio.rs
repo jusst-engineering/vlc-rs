@@ -13,6 +13,8 @@ pub trait MediaPlayerAudioEx {
     fn get_volume(&self) -> i32;
     fn set_volume(&self, volume: i32) -> Result<(), ()>;
     fn get_audio_track_description(&self) -> Option<Vec<TrackDescription>>;
+    fn get_audio_track(&self) -> Option<i32>;
+    fn set_audio_track(&self, track: i32);
 }
 
 impl MediaPlayerAudioEx for MediaPlayer {
@@ -62,6 +64,21 @@ impl MediaPlayerAudioEx for MediaPlayer {
             }
             sys::libvlc_track_description_list_release(p0);
             Some(td)
+        }
+    }
+    fn get_audio_track(&self) -> Option<i32> {
+        unsafe {
+            let track = sys::libvlc_audio_get_track(self.ptr);
+            if track == -1 {
+                None
+            } else {
+                Some(track)
+            }
+        }
+    }
+    fn set_audio_track(&self, track: i32) {
+        unsafe {
+            sys::libvlc_audio_set_track(self.ptr, track);
         }
     }
 }
