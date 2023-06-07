@@ -31,6 +31,10 @@ pub trait MediaPlayerVideoEx {
     fn get_adjust_float(&self, option: VideoAdjustOption) -> f32;
     fn set_adjust_float(&self, option: VideoAdjustOption, value: f32);
 
+    fn get_spu_track_description(&self) -> Option<Vec<TrackDescription>>;
+    fn get_spu_track(&self) -> Option<i32>;
+    fn set_spu_track(&self, track: i32);
+
     /// Get the current teletext page.
     fn get_teletext(&self) -> i32;
 
@@ -189,6 +193,47 @@ impl MediaPlayerVideoEx for MediaPlayer {
     fn set_adjust_float(&self, option: VideoAdjustOption, value: f32) {
         unsafe {
             sys::libvlc_video_set_adjust_float(self.ptr, option as u32, value);
+        }
+    }
+
+    fn get_spu_track_description(&self) -> Option<Vec<TrackDescription>> {
+        unsafe {
+            let tracks = sys::libvlc_video_get_spu_description(self.ptr);
+            if tracks.is_null() {
+                return None;
+            }
+
+            let mut track_vector = Vec::new();
+            let mut track = tracks;
+
+            while !(*track).p_next.is_null() {
+                track_vector.push(TrackDescription {
+                    id: (*track).i_id,
+                    name: from_cstr((*track).psz_name),
+                });
+
+                track = (*track).p_next;
+            }
+
+            sys::libvlc_track_description_release(tracks);
+            Some(track_vector)
+        }
+    }
+
+    fn get_spu_track(&self) -> Option<i32> {
+        unsafe {
+            let track = sys::libvlc_video_get_spu(self.ptr);
+            if track == -1 {
+                None
+            } else {
+                Some(track)
+            }
+        }
+    }
+
+    fn set_spu_track(&self, track: i32) {
+        unsafe {
+            sys::libvlc_video_set_spu(self.ptr, track);
         }
     }
 
