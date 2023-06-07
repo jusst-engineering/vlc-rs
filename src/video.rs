@@ -2,6 +2,8 @@
 // This file is part of vlc-rs.
 // Licensed under the MIT license, see the LICENSE file.
 
+use std::time::Duration;
+
 use crate::enums::VideoAdjustOption;
 use crate::tools::{from_cstr, to_cstr};
 use crate::MediaPlayer;
@@ -42,6 +44,19 @@ pub trait MediaPlayerVideoEx {
     ///            If set between 1 and 999, the according teletext page is loaded.
     ///            Also supports the values of TeletextKey enum for following special links.
     fn set_teletext(&self, page: u32);
+
+    /// Configure a message to show as marquee on top of the video.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - If `Some`, the text to display, if `None` the marquee is disabled.
+    fn set_marquee(
+        &self,
+        message: Option<&str>,
+        timeout: Option<Duration>,
+        x: Option<i32>,
+        y: Option<i32>,
+    );
 }
 
 impl MediaPlayerVideoEx for MediaPlayer {
@@ -184,6 +199,56 @@ impl MediaPlayerVideoEx for MediaPlayer {
     fn set_teletext(&self, page: u32) {
         unsafe {
             sys::libvlc_video_set_teletext(self.ptr, page as i32);
+        }
+    }
+
+    fn set_marquee(
+        &self,
+        message: Option<&str>,
+        timeout: Option<Duration>,
+        x: Option<i32>,
+        y: Option<i32>,
+    ) {
+        if let Some(msg) = message {
+            unsafe {
+                sys::libvlc_video_set_marquee_string(
+                    self.ptr,
+                    sys::libvlc_video_marquee_option_t_libvlc_marquee_Text,
+                    to_cstr(msg).as_ptr(),
+                );
+
+                sys::libvlc_video_set_marquee_int(
+                    self.ptr,
+                    sys::libvlc_video_marquee_option_t_libvlc_marquee_Timeout,
+                    timeout
+                        .unwrap_or(Duration::ZERO)
+                        .as_millis()
+                        .clamp(0, i32::MAX as u128) as i32,
+                );
+                sys::libvlc_video_set_marquee_int(
+                    self.ptr,
+                    sys::libvlc_video_marquee_option_t_libvlc_marquee_X,
+                    x.unwrap_or(0),
+                );
+                sys::libvlc_video_set_marquee_int(
+                    self.ptr,
+                    sys::libvlc_video_marquee_option_t_libvlc_marquee_Y,
+                    y.unwrap_or(0),
+                );
+                sys::libvlc_video_set_marquee_int(
+                    self.ptr,
+                    sys::libvlc_video_marquee_option_t_libvlc_marquee_Enable,
+                    1,
+                );
+            }
+        } else {
+            unsafe {
+                sys::libvlc_video_set_marquee_int(
+                    self.ptr,
+                    sys::libvlc_video_marquee_option_t_libvlc_marquee_Enable,
+                    0,
+                );
+            }
         }
     }
 }
