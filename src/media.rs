@@ -200,6 +200,52 @@ impl Media {
         }
     }
 
+    /// Returns statistics of current media playback
+    pub fn stats(&self) -> Option<MediaStats> {
+        unsafe {
+            let mut p_stats: sys::libvlc_media_stats_t = sys::libvlc_media_stats_t {
+                i_read_bytes: 0,
+                f_input_bitrate: 0.0,
+                i_demux_read_bytes: 0,
+                f_demux_bitrate: 0.0,
+                i_demux_corrupted: 0,
+                i_demux_discontinuity: 0,
+                i_decoded_video: 0,
+                i_decoded_audio: 0,
+                i_displayed_pictures: 0,
+                i_lost_pictures: 0,
+                i_played_abuffers: 0,
+                i_lost_abuffers: 0,
+                i_sent_packets: 0,
+                i_sent_bytes: 0,
+                f_send_bitrate: 0.0,
+            };
+
+            let n = sys::libvlc_media_get_stats(self.ptr, &mut p_stats);
+            if n == 0 {
+                return None;
+            }
+
+            Some(MediaStats {
+                read_bytes: p_stats.i_read_bytes,
+                input_bitrate: p_stats.f_input_bitrate,
+                demux_read_bytes: p_stats.i_demux_read_bytes,
+                demux_bitrate: p_stats.f_demux_bitrate,
+                demux_corrupted: p_stats.i_demux_corrupted,
+                demux_discontinuity: p_stats.i_demux_discontinuity,
+                decoded_video: p_stats.i_decoded_video,
+                decoded_audio: p_stats.i_decoded_audio,
+                displayed_pictures: p_stats.i_displayed_pictures,
+                lost_pictures: p_stats.i_lost_pictures,
+                played_abuffers: p_stats.i_played_abuffers,
+                lost_abuffers: p_stats.i_lost_abuffers,
+                sent_packets: p_stats.i_sent_packets,
+                sent_bytes: p_stats.i_sent_bytes,
+                send_bitrate: p_stats.f_send_bitrate,
+            })
+        }
+    }
+
     /// Returns raw pointer
     pub fn raw(&self) -> *mut sys::libvlc_media_t {
         self.ptr
@@ -253,4 +299,23 @@ pub struct VideoTrack {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct SubtitleTrack {
     pub encoding: Option<String>,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct MediaStats {
+    pub read_bytes: i32,
+    pub input_bitrate: f32,
+    pub demux_read_bytes: i32,
+    pub demux_bitrate: f32,
+    pub demux_corrupted: i32,
+    pub demux_discontinuity: i32,
+    pub decoded_video: i32,
+    pub decoded_audio: i32,
+    pub displayed_pictures: i32,
+    pub lost_pictures: i32,
+    pub played_abuffers: i32,
+    pub lost_abuffers: i32,
+    pub sent_packets: i32,
+    pub sent_bytes: i32,
+    pub send_bitrate: f32,
 }
