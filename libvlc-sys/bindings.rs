@@ -377,39 +377,145 @@ pub struct libvlc_instance_t {
 }
 pub type libvlc_time_t = i64;
 extern "C" {
+    #[doc = " A human-readable error message for the last LibVLC error in the calling"]
+    #[doc = " thread. The resulting string is valid until another error occurs (at least"]
+    #[doc = " until the next LibVLC call)."]
+    #[doc = ""]
+    #[doc = " @warning"]
+    #[doc = " This will be NULL if there was no error."]
     pub fn libvlc_errmsg() -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Clears the LibVLC error status for the current thread. This is optional."]
+    #[doc = " By default, the error status is automatically overridden when a new error"]
+    #[doc = " occurs, and destroyed when the thread exits."]
     pub fn libvlc_clearerr();
 }
 extern "C" {
+    #[doc = " Sets the LibVLC error status and message for the current thread."]
+    #[doc = " Any previous error is overridden."]
+    #[doc = " \\param fmt the format string"]
+    #[doc = " \\param ap the arguments"]
+    #[doc = " \\return a nul terminated string in any case"]
     pub fn libvlc_vprinterr(
         fmt: *const libc::c_char,
         ap: *mut __va_list_tag,
     ) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Sets the LibVLC error status and message for the current thread."]
+    #[doc = " Any previous error is overridden."]
+    #[doc = " \\param fmt the format string"]
+    #[doc = " \\param args the arguments"]
+    #[doc = " \\return a nul terminated string in any case"]
     pub fn libvlc_printerr(fmt: *const libc::c_char, ...) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Create and initialize a libvlc instance."]
+    #[doc = " This functions accept a list of \"command line\" arguments similar to the"]
+    #[doc = " main(). These arguments affect the LibVLC instance default configuration."]
+    #[doc = ""]
+    #[doc = " \\note"]
+    #[doc = " LibVLC may create threads. Therefore, any thread-unsafe process"]
+    #[doc = " initialization must be performed before calling libvlc_new(). In particular"]
+    #[doc = " and where applicable:"]
+    #[doc = " - setlocale() and textdomain(),"]
+    #[doc = " - setenv(), unsetenv() and putenv(),"]
+    #[doc = " - with the X11 display system, XInitThreads()"]
+    #[doc = "   (see also libvlc_media_player_set_xwindow()) and"]
+    #[doc = " - on Microsoft Windows, SetErrorMode()."]
+    #[doc = " - sigprocmask() shall never be invoked; pthread_sigmask() can be used."]
+    #[doc = ""]
+    #[doc = " On POSIX systems, the SIGCHLD signal <b>must not</b> be ignored, i.e. the"]
+    #[doc = " signal handler must set to SIG_DFL or a function pointer, not SIG_IGN."]
+    #[doc = " Also while LibVLC is active, the wait() function shall not be called, and"]
+    #[doc = " any call to waitpid() shall use a strictly positive value for the first"]
+    #[doc = " parameter (i.e. the PID). Failure to follow those rules may lead to a"]
+    #[doc = " deadlock or a busy loop."]
+    #[doc = " Also on POSIX systems, it is recommended that the SIGPIPE signal be blocked,"]
+    #[doc = " even if it is not, in principles, necessary, e.g.:"]
+    #[doc = " @code"]
+    #[doc = "sigset_t set;"]
+    #[doc = ""]
+    #[doc = "signal(SIGCHLD, SIG_DFL);"]
+    #[doc = "sigemptyset(&set);"]
+    #[doc = "sigaddset(&set, SIGPIPE);"]
+    #[doc = "pthread_sigmask(SIG_BLOCK, &set, NULL);"]
+    #[doc = " @endcode"]
+    #[doc = ""]
+    #[doc = " On Microsoft Windows Vista/2008, the process error mode"]
+    #[doc = " SEM_FAILCRITICALERRORS flag <b>must</b> be set before using LibVLC."]
+    #[doc = " On later versions, that is optional and unnecessary."]
+    #[doc = " Also on Microsoft Windows (Vista and any later version), setting the default"]
+    #[doc = " DLL directories to SYSTEM32 exclusively is strongly recommended for"]
+    #[doc = " security reasons:"]
+    #[doc = " @code"]
+    #[doc = "SetErrorMode(SEM_FAILCRITICALERRORS);"]
+    #[doc = "SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);"]
+    #[doc = " @endcode"]
+    #[doc = ""]
+    #[doc = " \\version"]
+    #[doc = " Arguments are meant to be passed from the command line to LibVLC, just like"]
+    #[doc = " VLC media player does. The list of valid arguments depends on the LibVLC"]
+    #[doc = " version, the operating system and platform, and set of available LibVLC"]
+    #[doc = " plugins. Invalid or unsupported arguments will cause the function to fail"]
+    #[doc = " (i.e. return NULL). Also, some arguments may alter the behaviour or"]
+    #[doc = " otherwise interfere with other LibVLC functions."]
+    #[doc = ""]
+    #[doc = " \\warning"]
+    #[doc = " There is absolutely no warranty or promise of forward, backward and"]
+    #[doc = " cross-platform compatibility with regards to libvlc_new() arguments."]
+    #[doc = " We recommend that you do not use them, other than when debugging."]
+    #[doc = ""]
+    #[doc = " \\param argc the number of arguments (should be 0)"]
+    #[doc = " \\param argv list of arguments (should be NULL)"]
+    #[doc = " \\return the libvlc instance or NULL in case of error"]
     pub fn libvlc_new(
         argc: libc::c_int,
         argv: *const *const libc::c_char,
     ) -> *mut libvlc_instance_t;
 }
 extern "C" {
+    #[doc = " Decrement the reference count of a libvlc instance, and destroy it"]
+    #[doc = " if it reaches zero."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance to destroy"]
     pub fn libvlc_release(p_instance: *mut libvlc_instance_t);
 }
 extern "C" {
+    #[doc = " Increments the reference count of a libvlc instance."]
+    #[doc = " The initial reference count is 1 after libvlc_new() returns."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance to reference"]
     pub fn libvlc_retain(p_instance: *mut libvlc_instance_t);
 }
 extern "C" {
+    #[doc = " Try to start a user interface for the libvlc instance."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param name interface name, or NULL for default"]
+    #[doc = " \\return 0 on success, -1 on error."]
     pub fn libvlc_add_intf(
         p_instance: *mut libvlc_instance_t,
         name: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Registers a callback for the LibVLC exit event. This is mostly useful if"]
+    #[doc = " the VLC playlist and/or at least one interface are started with"]
+    #[doc = " libvlc_playlist_play() or libvlc_add_intf() respectively."]
+    #[doc = " Typically, this function will wake up your application main loop (from"]
+    #[doc = " another thread)."]
+    #[doc = ""]
+    #[doc = " \\note This function should be called before the playlist or interface are"]
+    #[doc = " started. Otherwise, there is a small race condition: the exit event could"]
+    #[doc = " be raised before the handler is registered."]
+    #[doc = ""]
+    #[doc = " \\param p_instance LibVLC instance"]
+    #[doc = " \\param cb callback to invoke when LibVLC wants to exit,"]
+    #[doc = "           or NULL to disable the exit handler (as by default)"]
+    #[doc = " \\param opaque data pointer for the callback"]
+    #[doc = " \\warning This function and libvlc_wait() cannot be used at the same time."]
     pub fn libvlc_set_exit_handler(
         p_instance: *mut libvlc_instance_t,
         cb: ::core::option::Option<unsafe extern "C" fn(arg1: *mut libc::c_void)>,
@@ -417,6 +523,13 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Sets the application name. LibVLC passes this as the user agent string"]
+    #[doc = " when a protocol requires it."]
+    #[doc = ""]
+    #[doc = " \\param p_instance LibVLC instance"]
+    #[doc = " \\param name human-readable application name, e.g. \"FooBar player 1.2.3\""]
+    #[doc = " \\param http HTTP User Agent, e.g. \"FooBar/1.2.3 Python/2.6.0\""]
+    #[doc = " \\version LibVLC 1.1.1 or later"]
     pub fn libvlc_set_user_agent(
         p_instance: *mut libvlc_instance_t,
         name: *const libc::c_char,
@@ -424,6 +537,14 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Sets some meta-information about the application."]
+    #[doc = " See also libvlc_set_user_agent()."]
+    #[doc = ""]
+    #[doc = " \\param p_instance LibVLC instance"]
+    #[doc = " \\param id Java-style application identifier, e.g. \"com.acme.foobar\""]
+    #[doc = " \\param version application version numbers, e.g. \"1.2.3\""]
+    #[doc = " \\param icon application icon name, e.g. \"foobar\""]
+    #[doc = " \\version LibVLC 2.1.0 or later."]
     pub fn libvlc_set_app_id(
         p_instance: *mut libvlc_instance_t,
         id: *const libc::c_char,
@@ -432,15 +553,35 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Retrieve libvlc version."]
+    #[doc = ""]
+    #[doc = " Example: \"1.1.0-git The Luggage\""]
+    #[doc = ""]
+    #[doc = " \\return a string containing the libvlc version"]
     pub fn libvlc_get_version() -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Retrieve libvlc compiler version."]
+    #[doc = ""]
+    #[doc = " Example: \"gcc version 4.2.3 (Ubuntu 4.2.3-2ubuntu6)\""]
+    #[doc = ""]
+    #[doc = " \\return a string containing the libvlc compiler version"]
     pub fn libvlc_get_compiler() -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Retrieve libvlc changeset."]
+    #[doc = ""]
+    #[doc = " Example: \"aa9bce0bc4\""]
+    #[doc = ""]
+    #[doc = " \\return a string containing the libvlc changeset"]
     pub fn libvlc_get_changeset() -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Frees an heap allocation returned by a LibVLC function."]
+    #[doc = " If you know you're using the same underlying C run-time as the LibVLC"]
+    #[doc = " implementation, then you can call ANSI C free() directly instead."]
+    #[doc = ""]
+    #[doc = " \\param ptr the pointer"]
     pub fn libvlc_free(ptr: *mut libc::c_void);
 }
 #[repr(C)]
@@ -448,11 +589,23 @@ extern "C" {
 pub struct libvlc_event_manager_t {
     _unused: [u8; 0],
 }
+#[doc = " Type of a LibVLC event."]
 pub type libvlc_event_type_t = libc::c_int;
+#[doc = " Callback function notification"]
+#[doc = " \\param p_event the event triggering the callback"]
 pub type libvlc_callback_t = ::core::option::Option<
     unsafe extern "C" fn(p_event: *const libvlc_event_t, p_data: *mut libc::c_void),
 >;
 extern "C" {
+    #[doc = " Register for an event notification."]
+    #[doc = ""]
+    #[doc = " \\param p_event_manager the event manager to which you want to attach to."]
+    #[doc = "        Generally it is obtained by vlc_my_object_event_manager() where"]
+    #[doc = "        my_object is the object you want to listen to."]
+    #[doc = " \\param i_event_type the desired event to which we want to listen"]
+    #[doc = " \\param f_callback the function to call when i_event_type occurs"]
+    #[doc = " \\param user_data user provided data to carry with the event"]
+    #[doc = " \\return 0 on success, ENOMEM on error"]
     pub fn libvlc_event_attach(
         p_event_manager: *mut libvlc_event_manager_t,
         i_event_type: libvlc_event_type_t,
@@ -461,6 +614,12 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Unregister an event notification."]
+    #[doc = ""]
+    #[doc = " \\param p_event_manager the event manager"]
+    #[doc = " \\param i_event_type the desired event to which we want to unregister"]
+    #[doc = " \\param f_callback the function to call when i_event_type occurs"]
+    #[doc = " \\param p_user_data user provided data to carry with the event"]
     pub fn libvlc_event_detach(
         p_event_manager: *mut libvlc_event_manager_t,
         i_event_type: libvlc_event_type_t,
@@ -469,12 +628,21 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Get an event's type name."]
+    #[doc = ""]
+    #[doc = " \\param event_type the desired event"]
     pub fn libvlc_event_type_name(event_type: libvlc_event_type_t) -> *const libc::c_char;
 }
+#[doc = "< Debug message"]
 pub const libvlc_log_level_LIBVLC_DEBUG: libvlc_log_level = 0;
+#[doc = "< Important informational message"]
 pub const libvlc_log_level_LIBVLC_NOTICE: libvlc_log_level = 2;
+#[doc = "< Warning (potential error) message"]
 pub const libvlc_log_level_LIBVLC_WARNING: libvlc_log_level = 3;
+#[doc = "< Error message"]
 pub const libvlc_log_level_LIBVLC_ERROR: libvlc_log_level = 4;
+#[doc = " Logging messages level."]
+#[doc = " \\note Future LibVLC versions may define new levels."]
 pub type libvlc_log_level = libc::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -483,6 +651,24 @@ pub struct vlc_log_t {
 }
 pub type libvlc_log_t = vlc_log_t;
 extern "C" {
+    #[doc = " Gets log message debug infos."]
+    #[doc = ""]
+    #[doc = " This function retrieves self-debug information about a log message:"]
+    #[doc = " - the name of the VLC module emitting the message,"]
+    #[doc = " - the name of the source code module (i.e. file) and"]
+    #[doc = " - the line number within the source code module."]
+    #[doc = ""]
+    #[doc = " The returned module name and file name will be NULL if unknown."]
+    #[doc = " The returned line number will similarly be zero if unknown."]
+    #[doc = ""]
+    #[doc = " \\param ctx message context (as passed to the @ref libvlc_log_cb callback)"]
+    #[doc = " \\param module module name storage (or NULL) [OUT]"]
+    #[doc = " \\param file source code file name storage (or NULL) [OUT]"]
+    #[doc = " \\param line source code file line number storage (or NULL) [OUT]"]
+    #[doc = " \\warning The returned module name and source code file name, if non-NULL,"]
+    #[doc = " are only valid until the logging callback returns."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 2.1.0 or later"]
     pub fn libvlc_log_get_context(
         ctx: *const libvlc_log_t,
         module: *mut *const libc::c_char,
@@ -491,6 +677,29 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Gets log message info."]
+    #[doc = ""]
+    #[doc = " This function retrieves meta-information about a log message:"]
+    #[doc = " - the type name of the VLC object emitting the message,"]
+    #[doc = " - the object header if any, and"]
+    #[doc = " - a temporaly-unique object identifier."]
+    #[doc = ""]
+    #[doc = " This information is mainly meant for <b>manual</b> troubleshooting."]
+    #[doc = ""]
+    #[doc = " The returned type name may be \"generic\" if unknown, but it cannot be NULL."]
+    #[doc = " The returned header will be NULL if unset; in current versions, the header"]
+    #[doc = " is used to distinguish for VLM inputs."]
+    #[doc = " The returned object ID will be zero if the message is not associated with"]
+    #[doc = " any VLC object."]
+    #[doc = ""]
+    #[doc = " \\param ctx message context (as passed to the @ref libvlc_log_cb callback)"]
+    #[doc = " \\param name object name storage (or NULL) [OUT]"]
+    #[doc = " \\param header object header (or NULL) [OUT]"]
+    #[doc = " \\param line source code file line number storage (or NULL) [OUT]"]
+    #[doc = " \\warning The returned module name and source code file name, if non-NULL,"]
+    #[doc = " are only valid until the logging callback returns."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 2.1.0 or later"]
     pub fn libvlc_log_get_object(
         ctx: *const libvlc_log_t,
         name: *mut *const libc::c_char,
@@ -498,6 +707,16 @@ extern "C" {
         id: *mut usize,
     );
 }
+#[doc = " Callback prototype for LibVLC log message handler."]
+#[doc = ""]
+#[doc = " \\param data data pointer as given to libvlc_log_set()"]
+#[doc = " \\param level message level (@ref libvlc_log_level)"]
+#[doc = " \\param ctx message context (meta-information about the message)"]
+#[doc = " \\param fmt printf() format string (as defined by ISO C11)"]
+#[doc = " \\param args variable argument list for the format"]
+#[doc = " \\note Log message handlers <b>must</b> be thread-safe."]
+#[doc = " \\warning The message context pointer, the format string parameters and the"]
+#[doc = "          variable arguments are only valid until the callback returns."]
 pub type libvlc_log_cb = ::core::option::Option<
     unsafe extern "C" fn(
         data: *mut libc::c_void,
@@ -508,9 +727,35 @@ pub type libvlc_log_cb = ::core::option::Option<
     ),
 >;
 extern "C" {
+    #[doc = " Unsets the logging callback."]
+    #[doc = ""]
+    #[doc = " This function deregisters the logging callback for a LibVLC instance."]
+    #[doc = " This is rarely needed as the callback is implicitly unset when the instance"]
+    #[doc = " is destroyed."]
+    #[doc = ""]
+    #[doc = " \\note This function will wait for any pending callbacks invocation to"]
+    #[doc = " complete (causing a deadlock if called from within the callback)."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\version LibVLC 2.1.0 or later"]
     pub fn libvlc_log_unset(p_instance: *mut libvlc_instance_t);
 }
 extern "C" {
+    #[doc = " Sets the logging callback for a LibVLC instance."]
+    #[doc = ""]
+    #[doc = " This function is thread-safe: it will wait for any pending callbacks"]
+    #[doc = " invocation to complete."]
+    #[doc = ""]
+    #[doc = " \\param cb callback function pointer"]
+    #[doc = " \\param data opaque data pointer for the callback function"]
+    #[doc = ""]
+    #[doc = " \\note Some log messages (especially debug) are emitted by LibVLC while"]
+    #[doc = " is being initialized. These messages cannot be captured with this interface."]
+    #[doc = ""]
+    #[doc = " \\warning A deadlock may occur if this function is called from the callback."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\version LibVLC 2.1.0 or later"]
     pub fn libvlc_log_set(
         p_instance: *mut libvlc_instance_t,
         cb: libvlc_log_cb,
@@ -518,8 +763,14 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Sets up logging to a file."]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\param stream FILE pointer opened for writing"]
+    #[doc = "         (the FILE pointer must remain valid until libvlc_log_unset())"]
+    #[doc = " \\version LibVLC 2.1.0 or later"]
     pub fn libvlc_log_set_file(p_instance: *mut libvlc_instance_t, stream: *mut FILE);
 }
+#[doc = " Description of a module."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_module_description_t {
@@ -605,19 +856,46 @@ fn bindgen_test_layout_libvlc_module_description_t() {
     );
 }
 extern "C" {
+    #[doc = " Release a list of module descriptions."]
+    #[doc = ""]
+    #[doc = " \\param p_list the list to be released"]
     pub fn libvlc_module_description_list_release(p_list: *mut libvlc_module_description_t);
 }
 extern "C" {
+    #[doc = " Returns a list of audio filters that are available."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = ""]
+    #[doc = " \\return a list of module descriptions. It should be freed with libvlc_module_description_list_release()."]
+    #[doc = "         In case of an error, NULL is returned."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_module_description_t"]
+    #[doc = " \\see libvlc_module_description_list_release"]
     pub fn libvlc_audio_filter_list_get(
         p_instance: *mut libvlc_instance_t,
     ) -> *mut libvlc_module_description_t;
 }
 extern "C" {
+    #[doc = " Returns a list of video filters that are available."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = ""]
+    #[doc = " \\return a list of module descriptions. It should be freed with libvlc_module_description_list_release()."]
+    #[doc = "         In case of an error, NULL is returned."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_module_description_t"]
+    #[doc = " \\see libvlc_module_description_list_release"]
     pub fn libvlc_video_filter_list_get(
         p_instance: *mut libvlc_instance_t,
     ) -> *mut libvlc_module_description_t;
 }
 extern "C" {
+    #[doc = " Return the current time as defined by LibVLC. The unit is the microsecond."]
+    #[doc = " Time increases monotonically (regardless of time zone changes and RTC"]
+    #[doc = " adjustements)."]
+    #[doc = " The origin is arbitrary but consistent across the whole system"]
+    #[doc = " (e.g. the system uptim, the time since the system was booted)."]
+    #[doc = " \\note On systems that support it, the POSIX monotonic clock is used."]
     pub fn libvlc_clock() -> i64;
 }
 #[repr(C)]
@@ -625,6 +903,9 @@ extern "C" {
 pub struct libvlc_renderer_discoverer_t {
     _unused: [u8; 0],
 }
+#[doc = " Renderer discoverer description"]
+#[doc = ""]
+#[doc = " \\see libvlc_renderer_discoverer_list_get()"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_rd_description_t {
@@ -674,55 +955,166 @@ pub struct libvlc_renderer_item_t {
     _unused: [u8; 0],
 }
 extern "C" {
+    #[doc = " Hold a renderer item, i.e. creates a new reference"]
+    #[doc = ""]
+    #[doc = " This functions need to called from the libvlc_RendererDiscovererItemAdded"]
+    #[doc = " callback if the libvlc user wants to use this item after. (for display or"]
+    #[doc = " for passing it to the mediaplayer for example)."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\return the current item"]
     pub fn libvlc_renderer_item_hold(
         p_item: *mut libvlc_renderer_item_t,
     ) -> *mut libvlc_renderer_item_t;
 }
 extern "C" {
+    #[doc = " Releases a renderer item, i.e. decrements its reference counter"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_renderer_item_release(p_item: *mut libvlc_renderer_item_t);
 }
 extern "C" {
+    #[doc = " Get the human readable name of a renderer item"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\return the name of the item (can't be NULL, must *not* be freed)"]
     pub fn libvlc_renderer_item_name(p_item: *const libvlc_renderer_item_t) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Get the type (not translated) of a renderer item. For now, the type can only"]
+    #[doc = " be \"chromecast\" (\"upnp\", \"airplay\" may come later)."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\return the type of the item (can't be NULL, must *not* be freed)"]
     pub fn libvlc_renderer_item_type(p_item: *const libvlc_renderer_item_t) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Get the icon uri of a renderer item"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\return the uri of the item's icon (can be NULL, must *not* be freed)"]
     pub fn libvlc_renderer_item_icon_uri(
         p_item: *const libvlc_renderer_item_t,
     ) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Get the flags of a renderer item"]
+    #[doc = ""]
+    #[doc = " \\see LIBVLC_RENDERER_CAN_AUDIO"]
+    #[doc = " \\see LIBVLC_RENDERER_CAN_VIDEO"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\return bitwise flag: capabilities of the renderer, see"]
     pub fn libvlc_renderer_item_flags(p_item: *const libvlc_renderer_item_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Create a renderer discoverer object by name"]
+    #[doc = ""]
+    #[doc = " After this object is created, you should attach to events in order to be"]
+    #[doc = " notified of the discoverer events."]
+    #[doc = ""]
+    #[doc = " You need to call libvlc_renderer_discoverer_start() in order to start the"]
+    #[doc = " discovery."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_renderer_discoverer_event_manager()"]
+    #[doc = " \\see libvlc_renderer_discoverer_start()"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\param p_inst libvlc instance"]
+    #[doc = " \\param psz_name service name; use libvlc_renderer_discoverer_list_get() to"]
+    #[doc = " get a list of the discoverer names available in this libVLC instance"]
+    #[doc = " \\return media discover object or NULL in case of error"]
     pub fn libvlc_renderer_discoverer_new(
         p_inst: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> *mut libvlc_renderer_discoverer_t;
 }
 extern "C" {
+    #[doc = " Release a renderer discoverer object"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\param p_rd renderer discoverer object"]
     pub fn libvlc_renderer_discoverer_release(p_rd: *mut libvlc_renderer_discoverer_t);
 }
 extern "C" {
+    #[doc = " Start renderer discovery"]
+    #[doc = ""]
+    #[doc = " To stop it, call libvlc_renderer_discoverer_stop() or"]
+    #[doc = " libvlc_renderer_discoverer_release() directly."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_renderer_discoverer_stop()"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\param p_rd renderer discoverer object"]
+    #[doc = " \\return -1 in case of error, 0 otherwise"]
     pub fn libvlc_renderer_discoverer_start(p_rd: *mut libvlc_renderer_discoverer_t)
         -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Stop renderer discovery."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_renderer_discoverer_start()"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\param p_rd renderer discoverer object"]
     pub fn libvlc_renderer_discoverer_stop(p_rd: *mut libvlc_renderer_discoverer_t);
 }
 extern "C" {
+    #[doc = " Get the event manager of the renderer discoverer"]
+    #[doc = ""]
+    #[doc = " The possible events to attach are @ref libvlc_RendererDiscovererItemAdded"]
+    #[doc = " and @ref libvlc_RendererDiscovererItemDeleted."]
+    #[doc = ""]
+    #[doc = " The @ref libvlc_renderer_item_t struct passed to event callbacks is owned by"]
+    #[doc = " VLC, users should take care of holding/releasing this struct for their"]
+    #[doc = " internal usage."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_event_t.u.renderer_discoverer_item_added.item"]
+    #[doc = " \\see libvlc_event_t.u.renderer_discoverer_item_removed.item"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
+    #[doc = ""]
+    #[doc = " \\return a valid event manager (can't fail)"]
     pub fn libvlc_renderer_discoverer_event_manager(
         p_rd: *mut libvlc_renderer_discoverer_t,
     ) -> *mut libvlc_event_manager_t;
 }
 extern "C" {
+    #[doc = " Get media discoverer services"]
+    #[doc = ""]
+    #[doc = " \\see libvlc_renderer_list_release()"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later"]
+    #[doc = ""]
+    #[doc = " \\param p_inst libvlc instance"]
+    #[doc = " \\param ppp_services address to store an allocated array of renderer"]
+    #[doc = " discoverer services (must be freed with libvlc_renderer_list_release() by"]
+    #[doc = " the caller) [OUT]"]
+    #[doc = ""]
+    #[doc = " \\return the number of media discoverer services (0 on error)"]
     pub fn libvlc_renderer_discoverer_list_get(
         p_inst: *mut libvlc_instance_t,
         ppp_services: *mut *mut *mut libvlc_rd_description_t,
     ) -> size_t;
 }
 extern "C" {
+    #[doc = " Release an array of media discoverer services"]
+    #[doc = ""]
+    #[doc = " \\see libvlc_renderer_discoverer_list_get()"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later"]
+    #[doc = ""]
+    #[doc = " \\param pp_services array to release"]
+    #[doc = " \\param i_count number of elements in the array"]
     pub fn libvlc_renderer_discoverer_list_release(
         pp_services: *mut *mut libvlc_rd_description_t,
         i_count: size_t,
@@ -759,6 +1151,7 @@ pub const libvlc_meta_t_libvlc_meta_Actors: libvlc_meta_t = 22;
 pub const libvlc_meta_t_libvlc_meta_AlbumArtist: libvlc_meta_t = 23;
 pub const libvlc_meta_t_libvlc_meta_DiscNumber: libvlc_meta_t = 24;
 pub const libvlc_meta_t_libvlc_meta_DiscTotal: libvlc_meta_t = 25;
+#[doc = " Meta data types"]
 pub type libvlc_meta_t = libc::c_uint;
 pub const libvlc_state_t_libvlc_NothingSpecial: libvlc_state_t = 0;
 pub const libvlc_state_t_libvlc_Opening: libvlc_state_t = 1;
@@ -768,6 +1161,13 @@ pub const libvlc_state_t_libvlc_Paused: libvlc_state_t = 4;
 pub const libvlc_state_t_libvlc_Stopped: libvlc_state_t = 5;
 pub const libvlc_state_t_libvlc_Ended: libvlc_state_t = 6;
 pub const libvlc_state_t_libvlc_Error: libvlc_state_t = 7;
+#[doc = " Note the order of libvlc_state_t enum must match exactly the order of"]
+#[doc = " \\see mediacontrol_PlayerStatus, \\see input_state_e enums,"]
+#[doc = " and VideoLAN.LibVLC.State (at bindings/cil/src/media.cs)."]
+#[doc = ""]
+#[doc = " Expected states by web plugins are:"]
+#[doc = " IDLE/CLOSE=0, OPENING=1, PLAYING=3, PAUSED=4,"]
+#[doc = " STOPPING=5, ENDED=6, ERROR=7"]
 pub type libvlc_state_t = libc::c_uint;
 pub const libvlc_media_option_trusted: libc::c_uint = 2;
 pub const libvlc_media_option_unique: libc::c_uint = 256;
@@ -1277,28 +1677,44 @@ fn bindgen_test_layout_libvlc_audio_track_t() {
         )
     );
 }
+#[doc = "< Normal. Top line represents top, left column left."]
 pub const libvlc_video_orient_t_libvlc_video_orient_top_left: libvlc_video_orient_t = 0;
+#[doc = "< Flipped horizontally"]
 pub const libvlc_video_orient_t_libvlc_video_orient_top_right: libvlc_video_orient_t = 1;
+#[doc = "< Flipped vertically"]
 pub const libvlc_video_orient_t_libvlc_video_orient_bottom_left: libvlc_video_orient_t = 2;
+#[doc = "< Rotated 180 degrees"]
 pub const libvlc_video_orient_t_libvlc_video_orient_bottom_right: libvlc_video_orient_t = 3;
+#[doc = "< Transposed"]
 pub const libvlc_video_orient_t_libvlc_video_orient_left_top: libvlc_video_orient_t = 4;
+#[doc = "< Rotated 90 degrees clockwise (or 270 anti-clockwise)"]
 pub const libvlc_video_orient_t_libvlc_video_orient_left_bottom: libvlc_video_orient_t = 5;
+#[doc = "< Rotated 90 degrees anti-clockwise"]
 pub const libvlc_video_orient_t_libvlc_video_orient_right_top: libvlc_video_orient_t = 6;
+#[doc = "< Anti-transposed"]
 pub const libvlc_video_orient_t_libvlc_video_orient_right_bottom: libvlc_video_orient_t = 7;
 pub type libvlc_video_orient_t = libc::c_uint;
 pub const libvlc_video_projection_t_libvlc_video_projection_rectangular: libvlc_video_projection_t =
     0;
+#[doc = "< 360 spherical"]
 pub const libvlc_video_projection_t_libvlc_video_projection_equirectangular:
     libvlc_video_projection_t = 1;
 pub const libvlc_video_projection_t_libvlc_video_projection_cubemap_layout_standard:
     libvlc_video_projection_t = 256;
 pub type libvlc_video_projection_t = libc::c_uint;
+#[doc = " Viewpoint"]
+#[doc = ""]
+#[doc = " \\warning allocate using libvlc_video_new_viewpoint()"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_video_viewpoint_t {
+    #[doc = "< view point yaw in degrees  ]-180;180]"]
     pub f_yaw: f32,
+    #[doc = "< view point pitch in degrees  ]-90;90]"]
     pub f_pitch: f32,
+    #[doc = "< view point roll in degrees ]-180;180]"]
     pub f_roll: f32,
+    #[doc = "< field of view in degrees ]0;180[ (default 80.)"]
     pub f_field_of_view: f32,
 }
 #[test]
@@ -1372,6 +1788,7 @@ pub struct libvlc_video_track_t {
     pub i_frame_rate_den: libc::c_uint,
     pub i_orientation: libvlc_video_orient_t,
     pub i_projection: libvlc_video_projection_t,
+    #[doc = "< Initial view point"]
     pub pose: libvlc_video_viewpoint_t,
 }
 #[test]
@@ -1706,12 +2123,25 @@ pub const libvlc_media_type_t_libvlc_media_type_directory: libvlc_media_type_t =
 pub const libvlc_media_type_t_libvlc_media_type_disc: libvlc_media_type_t = 3;
 pub const libvlc_media_type_t_libvlc_media_type_stream: libvlc_media_type_t = 4;
 pub const libvlc_media_type_t_libvlc_media_type_playlist: libvlc_media_type_t = 5;
+#[doc = " Media type"]
+#[doc = ""]
+#[doc = " \\see libvlc_media_get_type"]
 pub type libvlc_media_type_t = libc::c_uint;
+#[doc = " Parse media if it's a local file"]
 pub const libvlc_media_parse_flag_t_libvlc_media_parse_local: libvlc_media_parse_flag_t = 0;
+#[doc = " Parse media even if it's a network file"]
 pub const libvlc_media_parse_flag_t_libvlc_media_parse_network: libvlc_media_parse_flag_t = 1;
+#[doc = " Fetch meta and covert art using local resources"]
 pub const libvlc_media_parse_flag_t_libvlc_media_fetch_local: libvlc_media_parse_flag_t = 2;
+#[doc = " Fetch meta and covert art using network resources"]
 pub const libvlc_media_parse_flag_t_libvlc_media_fetch_network: libvlc_media_parse_flag_t = 4;
+#[doc = " Interact with the user (via libvlc_dialog_cbs) when preparsing this item"]
+#[doc = " (and not its sub items). Set this flag in order to receive a callback"]
+#[doc = " when the input is asking for credentials."]
 pub const libvlc_media_parse_flag_t_libvlc_media_do_interact: libvlc_media_parse_flag_t = 8;
+#[doc = " Parse flags used by libvlc_media_parse_with_options()"]
+#[doc = ""]
+#[doc = " \\see libvlc_media_parse_with_options"]
 pub type libvlc_media_parse_flag_t = libc::c_uint;
 pub const libvlc_media_parsed_status_t_libvlc_media_parsed_status_skipped:
     libvlc_media_parsed_status_t = 1;
@@ -1721,10 +2151,18 @@ pub const libvlc_media_parsed_status_t_libvlc_media_parsed_status_timeout:
     libvlc_media_parsed_status_t = 3;
 pub const libvlc_media_parsed_status_t_libvlc_media_parsed_status_done:
     libvlc_media_parsed_status_t = 4;
+#[doc = " Parse status used sent by libvlc_media_parse_with_options() or returned by"]
+#[doc = " libvlc_media_get_parsed_status()"]
+#[doc = ""]
+#[doc = " \\see libvlc_media_parse_with_options"]
+#[doc = " \\see libvlc_media_get_parsed_status"]
 pub type libvlc_media_parsed_status_t = libc::c_uint;
 pub const libvlc_media_slave_type_t_libvlc_media_slave_type_subtitle: libvlc_media_slave_type_t = 0;
 pub const libvlc_media_slave_type_t_libvlc_media_slave_type_audio: libvlc_media_slave_type_t = 1;
+#[doc = " Type of a media slave: subtitle or audio."]
 pub type libvlc_media_slave_type_t = libc::c_uint;
+#[doc = " A slave of a libvlc_media_t"]
+#[doc = " \\see libvlc_media_slaves_get"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_media_slave_t {
@@ -1777,6 +2215,22 @@ fn bindgen_test_layout_libvlc_media_slave_t() {
         )
     );
 }
+#[doc = " Callback prototype to open a custom bitstream input media."]
+#[doc = ""]
+#[doc = " The same media item can be opened multiple times. Each time, this callback"]
+#[doc = " is invoked. It should allocate and initialize any instance-specific"]
+#[doc = " resources, then store them in *datap. The instance resources can be freed"]
+#[doc = " in the @ref libvlc_media_close_cb callback."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as passed to libvlc_media_new_callbacks()"]
+#[doc = " \\param datap storage space for a private data pointer [OUT]"]
+#[doc = " \\param sizep byte length of the bitstream or UINT64_MAX if unknown [OUT]"]
+#[doc = ""]
+#[doc = " \\note For convenience, *datap is initially NULL and *sizep is initially 0."]
+#[doc = ""]
+#[doc = " \\return 0 on success, non-zero on error. In case of failure, the other"]
+#[doc = " callbacks will not be invoked and any value stored in *datap and *sizep is"]
+#[doc = " discarded."]
 pub type libvlc_media_open_cb = ::core::option::Option<
     unsafe extern "C" fn(
         opaque: *mut libc::c_void,
@@ -1784,6 +2238,20 @@ pub type libvlc_media_open_cb = ::core::option::Option<
         sizep: *mut u64,
     ) -> libc::c_int,
 >;
+#[doc = " Callback prototype to read data from a custom bitstream input media."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as set by the @ref libvlc_media_open_cb"]
+#[doc = "               callback"]
+#[doc = " \\param buf start address of the buffer to read data into"]
+#[doc = " \\param len bytes length of the buffer"]
+#[doc = ""]
+#[doc = " \\return strictly positive number of bytes read, 0 on end-of-stream,"]
+#[doc = "         or -1 on non-recoverable error"]
+#[doc = ""]
+#[doc = " \\note If no data is immediately available, then the callback should sleep."]
+#[doc = " \\warning The application is responsible for avoiding deadlock situations."]
+#[doc = " In particular, the callback should return an error if playback is stopped;"]
+#[doc = " if it does not return, then libvlc_media_player_stop() will never return."]
 pub type libvlc_media_read_cb = ::core::option::Option<
     unsafe extern "C" fn(
         opaque: *mut libc::c_void,
@@ -1791,30 +2259,106 @@ pub type libvlc_media_read_cb = ::core::option::Option<
         len: size_t,
     ) -> ssize_t,
 >;
+#[doc = " Callback prototype to seek a custom bitstream input media."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as set by the @ref libvlc_media_open_cb"]
+#[doc = "               callback"]
+#[doc = " \\param offset absolute byte offset to seek to"]
+#[doc = " \\return 0 on success, -1 on error."]
 pub type libvlc_media_seek_cb = ::core::option::Option<
     unsafe extern "C" fn(opaque: *mut libc::c_void, offset: u64) -> libc::c_int,
 >;
+#[doc = " Callback prototype to close a custom bitstream input media."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as set by the @ref libvlc_media_open_cb"]
+#[doc = "               callback"]
 pub type libvlc_media_close_cb =
     ::core::option::Option<unsafe extern "C" fn(opaque: *mut libc::c_void)>;
 extern "C" {
+    #[doc = " Create a media with a certain given media resource location,"]
+    #[doc = " for instance a valid URL."]
+    #[doc = ""]
+    #[doc = " \\note To refer to a local file with this function,"]
+    #[doc = " the file://... URI syntax <b>must</b> be used (see IETF RFC3986)."]
+    #[doc = " We recommend using libvlc_media_new_path() instead when dealing with"]
+    #[doc = " local files."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_release"]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_mrl the media location"]
+    #[doc = " \\return the newly created media or NULL on error"]
     pub fn libvlc_media_new_location(
         p_instance: *mut libvlc_instance_t,
         psz_mrl: *const libc::c_char,
     ) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Create a media for a certain file path."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_release"]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param path local filesystem path"]
+    #[doc = " \\return the newly created media or NULL on error"]
     pub fn libvlc_media_new_path(
         p_instance: *mut libvlc_instance_t,
         path: *const libc::c_char,
     ) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Create a media for an already open file descriptor."]
+    #[doc = " The file descriptor shall be open for reading (or reading and writing)."]
+    #[doc = ""]
+    #[doc = " Regular file descriptors, pipe read descriptors and character device"]
+    #[doc = " descriptors (including TTYs) are supported on all platforms."]
+    #[doc = " Block device descriptors are supported where available."]
+    #[doc = " Directory descriptors are supported on systems that provide fdopendir()."]
+    #[doc = " Sockets are supported on all platforms where they are file descriptors,"]
+    #[doc = " i.e. all except Windows."]
+    #[doc = ""]
+    #[doc = " \\note This library will <b>not</b> automatically close the file descriptor"]
+    #[doc = " under any circumstance. Nevertheless, a file descriptor can usually only be"]
+    #[doc = " rendered once in a media player. To render it a second time, the file"]
+    #[doc = " descriptor should probably be rewound to the beginning with lseek()."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_release"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 1.1.5 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param fd open file descriptor"]
+    #[doc = " \\return the newly created media or NULL on error"]
     pub fn libvlc_media_new_fd(
         p_instance: *mut libvlc_instance_t,
         fd: libc::c_int,
     ) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Create a media with custom callbacks to read the data from."]
+    #[doc = ""]
+    #[doc = " \\param instance LibVLC instance"]
+    #[doc = " \\param open_cb callback to open the custom bitstream input media"]
+    #[doc = " \\param read_cb callback to read data (must not be NULL)"]
+    #[doc = " \\param seek_cb callback to seek, or NULL if seeking is not supported"]
+    #[doc = " \\param close_cb callback to close the media, or NULL if unnecessary"]
+    #[doc = " \\param opaque data pointer for the open callback"]
+    #[doc = ""]
+    #[doc = " \\return the newly created media or NULL on error"]
+    #[doc = ""]
+    #[doc = " \\note If open_cb is NULL, the opaque pointer will be passed to read_cb,"]
+    #[doc = " seek_cb and close_cb, and the stream size will be treated as unknown."]
+    #[doc = ""]
+    #[doc = " \\note The callbacks may be called asynchronously (from another thread)."]
+    #[doc = " A single stream instance need not be reentrant. However the open_cb needs to"]
+    #[doc = " be reentrant if the media is used by multiple player instances."]
+    #[doc = ""]
+    #[doc = " \\warning The callbacks may be used until all or any player instances"]
+    #[doc = " that were supplied the media item are stopped."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_release"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
     pub fn libvlc_media_new_callbacks(
         instance: *mut libvlc_instance_t,
         open_cb: libvlc_media_open_cb,
@@ -1825,15 +2369,53 @@ extern "C" {
     ) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Create a media as an empty node with a given name."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_release"]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the node"]
+    #[doc = " \\return the new empty media or NULL on error"]
     pub fn libvlc_media_new_as_node(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Add an option to the media."]
+    #[doc = ""]
+    #[doc = " This option will be used to determine how the media_player will"]
+    #[doc = " read the media. This allows to use VLC's advanced"]
+    #[doc = " reading/streaming options on a per-media basis."]
+    #[doc = ""]
+    #[doc = " \\note The options are listed in 'vlc --long-help' from the command line,"]
+    #[doc = " e.g. \"-sout-all\". Keep in mind that available options and their semantics"]
+    #[doc = " vary across LibVLC versions and builds."]
+    #[doc = " \\warning Not all options affects libvlc_media_t objects:"]
+    #[doc = " Specifically, due to architectural issues most audio and video options,"]
+    #[doc = " such as text renderer options, have no effects on an individual media."]
+    #[doc = " These options must be set through libvlc_new() instead."]
+    #[doc = ""]
+    #[doc = " \\param p_md the media descriptor"]
+    #[doc = " \\param psz_options the options (as a string)"]
     pub fn libvlc_media_add_option(p_md: *mut libvlc_media_t, psz_options: *const libc::c_char);
 }
 extern "C" {
+    #[doc = " Add an option to the media with configurable flags."]
+    #[doc = ""]
+    #[doc = " This option will be used to determine how the media_player will"]
+    #[doc = " read the media. This allows to use VLC's advanced"]
+    #[doc = " reading/streaming options on a per-media basis."]
+    #[doc = ""]
+    #[doc = " The options are detailed in vlc --long-help, for instance"]
+    #[doc = " \"--sout-all\". Note that all options are not usable on medias:"]
+    #[doc = " specifically, due to architectural issues, video-related options"]
+    #[doc = " such as text renderer options cannot be set on a single media. They"]
+    #[doc = " must be set on the whole libvlc instance instead."]
+    #[doc = ""]
+    #[doc = " \\param p_md the media descriptor"]
+    #[doc = " \\param psz_options the options (as a string)"]
+    #[doc = " \\param i_flags the flags for this option"]
     pub fn libvlc_media_add_option_flag(
         p_md: *mut libvlc_media_t,
         psz_options: *const libc::c_char,
@@ -1841,24 +2423,60 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Retain a reference to a media descriptor object (libvlc_media_t). Use"]
+    #[doc = " libvlc_media_release() to decrement the reference count of a"]
+    #[doc = " media descriptor object."]
+    #[doc = ""]
+    #[doc = " \\param p_md the media descriptor"]
     pub fn libvlc_media_retain(p_md: *mut libvlc_media_t);
 }
 extern "C" {
+    #[doc = " Decrement the reference count of a media descriptor object. If the"]
+    #[doc = " reference count is 0, then libvlc_media_release() will release the"]
+    #[doc = " media descriptor object. It will send out an libvlc_MediaFreed event"]
+    #[doc = " to all listeners. If the media descriptor object has been released it"]
+    #[doc = " should not be used again."]
+    #[doc = ""]
+    #[doc = " \\param p_md the media descriptor"]
     pub fn libvlc_media_release(p_md: *mut libvlc_media_t);
 }
 extern "C" {
+    #[doc = " Get the media resource locator (mrl) from a media descriptor object"]
+    #[doc = ""]
+    #[doc = " \\param p_md a media descriptor object"]
+    #[doc = " \\return string with mrl of media descriptor object"]
     pub fn libvlc_media_get_mrl(p_md: *mut libvlc_media_t) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Duplicate a media descriptor object."]
+    #[doc = ""]
+    #[doc = " \\param p_md a media descriptor object."]
     pub fn libvlc_media_duplicate(p_md: *mut libvlc_media_t) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Read the meta of the media."]
+    #[doc = ""]
+    #[doc = " If the media has not yet been parsed this will return NULL."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_parse"]
+    #[doc = " \\see libvlc_media_parse_with_options"]
+    #[doc = " \\see libvlc_MediaMetaChanged"]
+    #[doc = ""]
+    #[doc = " \\param p_md the media descriptor"]
+    #[doc = " \\param e_meta the meta to read"]
+    #[doc = " \\return the media's meta"]
     pub fn libvlc_media_get_meta(
         p_md: *mut libvlc_media_t,
         e_meta: libvlc_meta_t,
     ) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Set the meta of the media (this function will not save the meta, call"]
+    #[doc = " libvlc_media_save_meta in order to save the meta)"]
+    #[doc = ""]
+    #[doc = " \\param p_md the media descriptor"]
+    #[doc = " \\param e_meta the meta to write"]
+    #[doc = " \\param psz_value the media's meta"]
     pub fn libvlc_media_set_meta(
         p_md: *mut libvlc_media_t,
         e_meta: libvlc_meta_t,
@@ -1866,12 +2484,30 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Save the meta previously set"]
+    #[doc = ""]
+    #[doc = " \\param p_md the media desriptor"]
+    #[doc = " \\return true if the write operation was successful"]
     pub fn libvlc_media_save_meta(p_md: *mut libvlc_media_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get current state of media descriptor object. Possible media states are"]
+    #[doc = " libvlc_NothingSpecial=0, libvlc_Opening, libvlc_Playing, libvlc_Paused,"]
+    #[doc = " libvlc_Stopped, libvlc_Ended, libvlc_Error."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_state_t"]
+    #[doc = " \\param p_md a media descriptor object"]
+    #[doc = " \\return state of media descriptor object"]
     pub fn libvlc_media_get_state(p_md: *mut libvlc_media_t) -> libvlc_state_t;
 }
 extern "C" {
+    #[doc = " Get the current statistics about the media"]
+    #[doc = " \\param p_md: media descriptor object"]
+    #[doc = " \\param p_stats: structure that contain the statistics about the media"]
+    #[doc = "                 (this structure must be allocated by the caller)"]
+    #[doc = " \\return true if the statistics are available, false otherwise"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_get_stats(
         p_md: *mut libvlc_media_t,
         p_stats: *mut libvlc_media_stats_t,
@@ -1883,15 +2519,58 @@ pub struct libvlc_media_list_t {
     _unused: [u8; 0],
 }
 extern "C" {
+    #[doc = " Get subitems of media descriptor object. This will increment"]
+    #[doc = " the reference count of supplied media descriptor object. Use"]
+    #[doc = " libvlc_media_list_release() to decrement the reference counting."]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\return list of media descriptor subitems or NULL"]
     pub fn libvlc_media_subitems(p_md: *mut libvlc_media_t) -> *mut libvlc_media_list_t;
 }
 extern "C" {
+    #[doc = " Get event manager from media descriptor object."]
+    #[doc = " NOTE: this function doesn't increment reference counting."]
+    #[doc = ""]
+    #[doc = " \\param p_md a media descriptor object"]
+    #[doc = " \\return event manager object"]
     pub fn libvlc_media_event_manager(p_md: *mut libvlc_media_t) -> *mut libvlc_event_manager_t;
 }
 extern "C" {
+    #[doc = " Get duration (in ms) of media descriptor object item."]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\return duration of media item or -1 on error"]
     pub fn libvlc_media_get_duration(p_md: *mut libvlc_media_t) -> libvlc_time_t;
 }
 extern "C" {
+    #[doc = " Parse the media asynchronously with options."]
+    #[doc = ""]
+    #[doc = " This fetches (local or network) art, meta data and/or tracks information."]
+    #[doc = " This method is the extended version of libvlc_media_parse_with_options()."]
+    #[doc = ""]
+    #[doc = " To track when this is over you can listen to libvlc_MediaParsedChanged"]
+    #[doc = " event. However if this functions returns an error, you will not receive any"]
+    #[doc = " events."]
+    #[doc = ""]
+    #[doc = " It uses a flag to specify parse options (see libvlc_media_parse_flag_t). All"]
+    #[doc = " these flags can be combined. By default, media is parsed if it's a local"]
+    #[doc = " file."]
+    #[doc = ""]
+    #[doc = " \\note Parsing can be aborted with libvlc_media_parse_stop()."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_MediaParsedChanged"]
+    #[doc = " \\see libvlc_media_get_meta"]
+    #[doc = " \\see libvlc_media_tracks_get"]
+    #[doc = " \\see libvlc_media_get_parsed_status"]
+    #[doc = " \\see libvlc_media_parse_flag_t"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\param parse_flag parse options:"]
+    #[doc = " \\param timeout maximum time allowed to preparse the media. If -1, the"]
+    #[doc = " default \"preparse-timeout\" option will be used as a timeout. If 0, it will"]
+    #[doc = " wait indefinitely. If > 0, the timeout will be used (in milliseconds)."]
+    #[doc = " \\return -1 in case of error, 0 otherwise"]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_parse_with_options(
         p_md: *mut libvlc_media_t,
         parse_flag: libvlc_media_parse_flag_t,
@@ -1899,44 +2578,128 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Stop the parsing of the media"]
+    #[doc = ""]
+    #[doc = " When the media parsing is stopped, the libvlc_MediaParsedChanged event will"]
+    #[doc = " be sent with the libvlc_media_parsed_status_timeout status."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_parse_with_options"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_parse_stop(p_md: *mut libvlc_media_t);
 }
 extern "C" {
+    #[doc = " Get Parsed status for media descriptor object."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_MediaParsedChanged"]
+    #[doc = " \\see libvlc_media_parsed_status_t"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\return a value of the libvlc_media_parsed_status_t enum"]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_get_parsed_status(
         p_md: *mut libvlc_media_t,
     ) -> libvlc_media_parsed_status_t;
 }
 extern "C" {
+    #[doc = " Sets media descriptor's user_data. user_data is specialized data"]
+    #[doc = " accessed by the host application, VLC.framework uses it as a pointer to"]
+    #[doc = " an native object that references a libvlc_media_t pointer"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\param p_new_user_data pointer to user data"]
     pub fn libvlc_media_set_user_data(
         p_md: *mut libvlc_media_t,
         p_new_user_data: *mut libc::c_void,
     );
 }
 extern "C" {
+    #[doc = " Get media descriptor's user_data. user_data is specialized data"]
+    #[doc = " accessed by the host application, VLC.framework uses it as a pointer to"]
+    #[doc = " an native object that references a libvlc_media_t pointer"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
     pub fn libvlc_media_get_user_data(p_md: *mut libvlc_media_t) -> *mut libc::c_void;
 }
 extern "C" {
+    #[doc = " Get media descriptor's elementary streams description"]
+    #[doc = ""]
+    #[doc = " Note, you need to call libvlc_media_parse() or play the media at least once"]
+    #[doc = " before calling this function."]
+    #[doc = " Not doing this will result in an empty array."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 2.1.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\param tracks address to store an allocated array of Elementary Streams"]
+    #[doc = "        descriptions (must be freed with libvlc_media_tracks_release"]
+    #[doc = "by the caller) [OUT]"]
+    #[doc = ""]
+    #[doc = " \\return the number of Elementary Streams (zero on error)"]
     pub fn libvlc_media_tracks_get(
         p_md: *mut libvlc_media_t,
         tracks: *mut *mut *mut libvlc_media_track_t,
     ) -> libc::c_uint;
 }
 extern "C" {
+    #[doc = " Get codec description from media elementary stream"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_track_t"]
+    #[doc = ""]
+    #[doc = " \\param i_type i_type from libvlc_media_track_t"]
+    #[doc = " \\param i_codec i_codec or i_original_fourcc from libvlc_media_track_t"]
+    #[doc = ""]
+    #[doc = " \\return codec description"]
     pub fn libvlc_media_get_codec_description(
         i_type: libvlc_track_type_t,
         i_codec: u32,
     ) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Release media descriptor's elementary streams description array"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 2.1.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_tracks tracks info array to release"]
+    #[doc = " \\param i_count number of elements in the array"]
     pub fn libvlc_media_tracks_release(
         p_tracks: *mut *mut libvlc_media_track_t,
         i_count: libc::c_uint,
     );
 }
 extern "C" {
+    #[doc = " Get the media type of the media descriptor object"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_type_t"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = ""]
+    #[doc = " \\return media type"]
     pub fn libvlc_media_get_type(p_md: *mut libvlc_media_t) -> libvlc_media_type_t;
 }
 extern "C" {
+    #[doc = " Add a slave to the current media."]
+    #[doc = ""]
+    #[doc = " A slave is an external input source that may contains an additional subtitle"]
+    #[doc = " track (like a .srt) or an additional audio track (like a .ac3)."]
+    #[doc = ""]
+    #[doc = " \\note This function must be called before the media is parsed (via"]
+    #[doc = " libvlc_media_parse_with_options()) or before the media is played (via"]
+    #[doc = " libvlc_media_player_play())"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\param i_type subtitle or audio"]
+    #[doc = " \\param i_priority from 0 (low priority) to 4 (high priority)"]
+    #[doc = " \\param psz_uri Uri of the slave (should contain a valid scheme)."]
+    #[doc = ""]
+    #[doc = " \\return 0 on success, -1 on error."]
     pub fn libvlc_media_slaves_add(
         p_md: *mut libvlc_media_t,
         i_type: libvlc_media_slave_type_t,
@@ -1945,15 +2708,42 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Clear all slaves previously added by libvlc_media_slaves_add() or"]
+    #[doc = " internally."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
     pub fn libvlc_media_slaves_clear(p_md: *mut libvlc_media_t);
 }
 extern "C" {
+    #[doc = " Get a media descriptor's slave list"]
+    #[doc = ""]
+    #[doc = " The list will contain slaves parsed by VLC or previously added by"]
+    #[doc = " libvlc_media_slaves_add(). The typical use case of this function is to save"]
+    #[doc = " a list of slave in a database for a later use."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_slaves_add"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\param ppp_slaves address to store an allocated array of slaves (must be"]
+    #[doc = " freed with libvlc_media_slaves_release()) [OUT]"]
+    #[doc = ""]
+    #[doc = " \\return the number of slaves (zero on error)"]
     pub fn libvlc_media_slaves_get(
         p_md: *mut libvlc_media_t,
         ppp_slaves: *mut *mut *mut libvlc_media_slave_t,
     ) -> libc::c_uint;
 }
 extern "C" {
+    #[doc = " Release a media descriptor's slave list"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param pp_slaves slave array to release"]
+    #[doc = " \\param i_count number of elements in the array"]
     pub fn libvlc_media_slaves_release(
         pp_slaves: *mut *mut libvlc_media_slave_t,
         i_count: libc::c_uint,
@@ -1964,6 +2754,8 @@ extern "C" {
 pub struct libvlc_media_player_t {
     _unused: [u8; 0],
 }
+#[doc = " Description for video, audio tracks and subtitles. It contains"]
+#[doc = " id, name (description string) and pointer to next record."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_track_description_t {
@@ -2022,12 +2814,16 @@ fn bindgen_test_layout_libvlc_track_description_t() {
 }
 pub const libvlc_title_menu: libc::c_uint = 1;
 pub const libvlc_title_interactive: libc::c_uint = 2;
+#[doc = " Description for titles"]
 pub type _bindgen_ty_2 = libc::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_title_description_t {
+    #[doc = "< duration in milliseconds"]
     pub i_duration: i64,
+    #[doc = "< title name"]
     pub psz_name: *mut libc::c_char,
+    #[doc = "< info if item was recognized as a menu, interactive or plain content by the demuxer"]
     pub i_flags: libc::c_uint,
 }
 #[test]
@@ -2079,11 +2875,15 @@ fn bindgen_test_layout_libvlc_title_description_t() {
         )
     );
 }
+#[doc = " Description for chapters"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_chapter_description_t {
+    #[doc = "< time-offset of the chapter in milliseconds"]
     pub i_time_offset: i64,
+    #[doc = "< duration of the chapter in milliseconds"]
     pub i_duration: i64,
+    #[doc = "< chapter name"]
     pub psz_name: *mut libc::c_char,
 }
 #[test]
@@ -2137,6 +2937,8 @@ fn bindgen_test_layout_libvlc_chapter_description_t() {
         )
     );
 }
+#[doc = " Description for audio output. It contains"]
+#[doc = " name, description and pointer to next record."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_audio_output_t {
@@ -2189,11 +2991,15 @@ fn bindgen_test_layout_libvlc_audio_output_t() {
         )
     );
 }
+#[doc = " Description for audio output device."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_audio_output_device_t {
+    #[doc = "< Next entry in list"]
     pub p_next: *mut libvlc_audio_output_device_t,
+    #[doc = "< Device identifier string"]
     pub psz_device: *mut libc::c_char,
+    #[doc = "< User-friendly device description"]
     pub psz_description: *mut libc::c_char,
 }
 #[test]
@@ -2249,14 +3055,23 @@ fn bindgen_test_layout_libvlc_audio_output_device_t() {
 }
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Enable: libvlc_video_marquee_option_t = 0;
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Text: libvlc_video_marquee_option_t = 1;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Color: libvlc_video_marquee_option_t = 2;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Opacity: libvlc_video_marquee_option_t = 3;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Position: libvlc_video_marquee_option_t = 4;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Refresh: libvlc_video_marquee_option_t = 5;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Size: libvlc_video_marquee_option_t = 6;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Timeout: libvlc_video_marquee_option_t = 7;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_X: libvlc_video_marquee_option_t = 8;
+#[doc = " string argument"]
 pub const libvlc_video_marquee_option_t_libvlc_marquee_Y: libvlc_video_marquee_option_t = 9;
+#[doc = " Marq options definition"]
 pub type libvlc_video_marquee_option_t = libc::c_uint;
 pub const libvlc_navigate_mode_t_libvlc_navigate_activate: libvlc_navigate_mode_t = 0;
 pub const libvlc_navigate_mode_t_libvlc_navigate_up: libvlc_navigate_mode_t = 1;
@@ -2264,6 +3079,7 @@ pub const libvlc_navigate_mode_t_libvlc_navigate_down: libvlc_navigate_mode_t = 
 pub const libvlc_navigate_mode_t_libvlc_navigate_left: libvlc_navigate_mode_t = 3;
 pub const libvlc_navigate_mode_t_libvlc_navigate_right: libvlc_navigate_mode_t = 4;
 pub const libvlc_navigate_mode_t_libvlc_navigate_popup: libvlc_navigate_mode_t = 5;
+#[doc = " Navigation mode"]
 pub type libvlc_navigate_mode_t = libc::c_uint;
 pub const libvlc_position_t_libvlc_position_disable: libvlc_position_t = -1;
 pub const libvlc_position_t_libvlc_position_center: libvlc_position_t = 0;
@@ -2275,12 +3091,15 @@ pub const libvlc_position_t_libvlc_position_top_right: libvlc_position_t = 5;
 pub const libvlc_position_t_libvlc_position_bottom: libvlc_position_t = 6;
 pub const libvlc_position_t_libvlc_position_bottom_left: libvlc_position_t = 7;
 pub const libvlc_position_t_libvlc_position_bottom_right: libvlc_position_t = 8;
+#[doc = " Enumeration of values used to set position (e.g. of video title)."]
 pub type libvlc_position_t = libc::c_int;
 pub const libvlc_teletext_key_t_libvlc_teletext_key_red: libvlc_teletext_key_t = 7471104;
 pub const libvlc_teletext_key_t_libvlc_teletext_key_green: libvlc_teletext_key_t = 6750208;
 pub const libvlc_teletext_key_t_libvlc_teletext_key_yellow: libvlc_teletext_key_t = 7929856;
 pub const libvlc_teletext_key_t_libvlc_teletext_key_blue: libvlc_teletext_key_t = 6422528;
 pub const libvlc_teletext_key_t_libvlc_teletext_key_index: libvlc_teletext_key_t = 6881280;
+#[doc = " Enumeration of teletext keys than can be passed via"]
+#[doc = " libvlc_video_set_teletext()"]
 pub type libvlc_teletext_key_t = libc::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -2288,62 +3107,156 @@ pub struct libvlc_equalizer_t {
     _unused: [u8; 0],
 }
 extern "C" {
+    #[doc = " Create an empty Media Player object"]
+    #[doc = ""]
+    #[doc = " \\param p_libvlc_instance the libvlc instance in which the Media Player"]
+    #[doc = "        should be created."]
+    #[doc = " \\return a new media player object, or NULL on error."]
     pub fn libvlc_media_player_new(
         p_libvlc_instance: *mut libvlc_instance_t,
     ) -> *mut libvlc_media_player_t;
 }
 extern "C" {
+    #[doc = " Create a Media Player object from a Media"]
+    #[doc = ""]
+    #[doc = " \\param p_md the media. Afterwards the p_md can be safely"]
+    #[doc = "        destroyed."]
+    #[doc = " \\return a new media player object, or NULL on error."]
     pub fn libvlc_media_player_new_from_media(
         p_md: *mut libvlc_media_t,
     ) -> *mut libvlc_media_player_t;
 }
 extern "C" {
+    #[doc = " Release a media_player after use"]
+    #[doc = " Decrement the reference count of a media player object. If the"]
+    #[doc = " reference count is 0, then libvlc_media_player_release() will"]
+    #[doc = " release the media player object. If the media player object"]
+    #[doc = " has been released, then it should not be used again."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player to free"]
     pub fn libvlc_media_player_release(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Retain a reference to a media player object. Use"]
+    #[doc = " libvlc_media_player_release() to decrement reference count."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player object"]
     pub fn libvlc_media_player_retain(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Set the media that will be used by the media_player. If any,"]
+    #[doc = " previous md will be released."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param p_md the Media. Afterwards the p_md can be safely"]
+    #[doc = "        destroyed."]
     pub fn libvlc_media_player_set_media(
         p_mi: *mut libvlc_media_player_t,
         p_md: *mut libvlc_media_t,
     );
 }
 extern "C" {
+    #[doc = " Get the media used by the media_player."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return the media associated with p_mi, or NULL if no"]
+    #[doc = "         media is associated"]
     pub fn libvlc_media_player_get_media(p_mi: *mut libvlc_media_player_t) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Get the Event Manager from which the media player send event."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return the event manager associated with p_mi"]
     pub fn libvlc_media_player_event_manager(
         p_mi: *mut libvlc_media_player_t,
     ) -> *mut libvlc_event_manager_t;
 }
 extern "C" {
+    #[doc = " is_playing"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return 1 if the media player is playing, 0 otherwise"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_player_is_playing(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Play"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return 0 if playback started (and was already started), or -1 on error."]
     pub fn libvlc_media_player_play(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Pause or resume (no effect if there is no media)"]
+    #[doc = ""]
+    #[doc = " \\param mp the Media Player"]
+    #[doc = " \\param do_pause play/resume if zero, pause if non-zero"]
+    #[doc = " \\version LibVLC 1.1.1 or later"]
     pub fn libvlc_media_player_set_pause(mp: *mut libvlc_media_player_t, do_pause: libc::c_int);
 }
 extern "C" {
+    #[doc = " Toggle pause (no effect if there is no media)"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
     pub fn libvlc_media_player_pause(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Stop (no effect if there is no media)"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
     pub fn libvlc_media_player_stop(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Set a renderer to the media player"]
+    #[doc = ""]
+    #[doc = " \\note must be called before the first call of libvlc_media_player_play() to"]
+    #[doc = " take effect."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_renderer_discoverer_new"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param p_item an item discovered by libvlc_renderer_discoverer_start()"]
+    #[doc = " \\return 0 on success, -1 on error."]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_player_set_renderer(
         p_mi: *mut libvlc_media_player_t,
         p_item: *mut libvlc_renderer_item_t,
     ) -> libc::c_int;
 }
+#[doc = " Callback prototype to allocate and lock a picture buffer."]
+#[doc = ""]
+#[doc = " Whenever a new video frame needs to be decoded, the lock callback is"]
+#[doc = " invoked. Depending on the video chroma, one or three pixel planes of"]
+#[doc = " adequate dimensions must be returned via the second parameter. Those"]
+#[doc = " planes must be aligned on 32-bytes boundaries."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as passed to libvlc_video_set_callbacks() [IN]"]
+#[doc = " \\param planes start address of the pixel planes (LibVLC allocates the array"]
+#[doc = "             of void pointers, this callback must initialize the array) [OUT]"]
+#[doc = " \\return a private pointer for the display and unlock callbacks to identify"]
+#[doc = "         the picture buffers"]
 pub type libvlc_video_lock_cb = ::core::option::Option<
     unsafe extern "C" fn(
         opaque: *mut libc::c_void,
         planes: *mut *mut libc::c_void,
     ) -> *mut libc::c_void,
 >;
+#[doc = " Callback prototype to unlock a picture buffer."]
+#[doc = ""]
+#[doc = " When the video frame decoding is complete, the unlock callback is invoked."]
+#[doc = " This callback might not be needed at all. It is only an indication that the"]
+#[doc = " application can now read the pixel values if it needs to."]
+#[doc = ""]
+#[doc = " \\note A picture buffer is unlocked after the picture is decoded,"]
+#[doc = " but before the picture is displayed."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as passed to libvlc_video_set_callbacks() [IN]"]
+#[doc = " \\param picture private pointer returned from the @ref libvlc_video_lock_cb"]
+#[doc = "                callback [IN]"]
+#[doc = " \\param planes pixel planes as defined by the @ref libvlc_video_lock_cb"]
+#[doc = "               callback (this parameter is only for convenience) [IN]"]
 pub type libvlc_video_unlock_cb = ::core::option::Option<
     unsafe extern "C" fn(
         opaque: *mut libc::c_void,
@@ -2351,9 +3264,41 @@ pub type libvlc_video_unlock_cb = ::core::option::Option<
         planes: *const *mut libc::c_void,
     ),
 >;
+#[doc = " Callback prototype to display a picture."]
+#[doc = ""]
+#[doc = " When the video frame needs to be shown, as determined by the media playback"]
+#[doc = " clock, the display callback is invoked."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as passed to libvlc_video_set_callbacks() [IN]"]
+#[doc = " \\param picture private pointer returned from the @ref libvlc_video_lock_cb"]
+#[doc = "                callback [IN]"]
 pub type libvlc_video_display_cb = ::core::option::Option<
     unsafe extern "C" fn(opaque: *mut libc::c_void, picture: *mut libc::c_void),
 >;
+#[doc = " Callback prototype to configure picture buffers format."]
+#[doc = " This callback gets the format of the video as output by the video decoder"]
+#[doc = " and the chain of video filters (if any). It can opt to change any parameter"]
+#[doc = " as it needs. In that case, LibVLC will attempt to convert the video format"]
+#[doc = " (rescaling and chroma conversion) but these operations can be CPU intensive."]
+#[doc = ""]
+#[doc = " \\param opaque pointer to the private pointer passed to"]
+#[doc = "               libvlc_video_set_callbacks() [IN/OUT]"]
+#[doc = " \\param chroma pointer to the 4 bytes video format identifier [IN/OUT]"]
+#[doc = " \\param width pointer to the pixel width [IN/OUT]"]
+#[doc = " \\param height pointer to the pixel height [IN/OUT]"]
+#[doc = " \\param pitches table of scanline pitches in bytes for each pixel plane"]
+#[doc = "                (the table is allocated by LibVLC) [OUT]"]
+#[doc = " \\param lines table of scanlines count for each plane [OUT]"]
+#[doc = " \\return the number of picture buffers allocated, 0 indicates failure"]
+#[doc = ""]
+#[doc = " \\note"]
+#[doc = " For each pixels plane, the scanline pitch must be bigger than or equal to"]
+#[doc = " the number of bytes per pixel multiplied by the pixel width."]
+#[doc = " Similarly, the number of scanlines must be bigger than of equal to"]
+#[doc = " the pixel height."]
+#[doc = " Furthermore, we recommend that pitches and lines be multiple of 32"]
+#[doc = " to not break assumptions that might be held by optimized code"]
+#[doc = " in the video decoders, video filters and/or video converters."]
 pub type libvlc_video_format_cb = ::core::option::Option<
     unsafe extern "C" fn(
         opaque: *mut *mut libc::c_void,
@@ -2364,9 +3309,48 @@ pub type libvlc_video_format_cb = ::core::option::Option<
         lines: *mut libc::c_uint,
     ) -> libc::c_uint,
 >;
+#[doc = " Callback prototype to configure picture buffers format."]
+#[doc = ""]
+#[doc = " \\param opaque private pointer as passed to libvlc_video_set_callbacks()"]
+#[doc = "               (and possibly modified by @ref libvlc_video_format_cb) [IN]"]
 pub type libvlc_video_cleanup_cb =
     ::core::option::Option<unsafe extern "C" fn(opaque: *mut libc::c_void)>;
 extern "C" {
+    #[doc = " Set callbacks and private data to render decoded video to a custom area"]
+    #[doc = " in memory."]
+    #[doc = " Use libvlc_video_set_format() or libvlc_video_set_format_callbacks()"]
+    #[doc = " to configure the decoded format."]
+    #[doc = ""]
+    #[doc = " \\warning Rendering video into custom memory buffers is considerably less"]
+    #[doc = " efficient than rendering in a custom window as normal."]
+    #[doc = ""]
+    #[doc = " For optimal perfomances, VLC media player renders into a custom window, and"]
+    #[doc = " does not use this function and associated callbacks. It is <b>highly"]
+    #[doc = " recommended</b> that other LibVLC-based application do likewise."]
+    #[doc = " To embed video in a window, use libvlc_media_player_set_xid() or equivalent"]
+    #[doc = " depending on the operating system."]
+    #[doc = ""]
+    #[doc = " If window embedding does not fit the application use case, then a custom"]
+    #[doc = " LibVLC video output display plugin is required to maintain optimal video"]
+    #[doc = " rendering performances."]
+    #[doc = ""]
+    #[doc = " The following limitations affect performance:"]
+    #[doc = " - Hardware video decoding acceleration will either be disabled completely,"]
+    #[doc = "   or require (relatively slow) copy from video/DSP memory to main memory."]
+    #[doc = " - Sub-pictures (subtitles, on-screen display, etc.) must be blent into the"]
+    #[doc = "   main picture by the CPU instead of the GPU."]
+    #[doc = " - Depending on the video format, pixel format conversion, picture scaling,"]
+    #[doc = "   cropping and/or picture re-orientation, must be performed by the CPU"]
+    #[doc = "   instead of the GPU."]
+    #[doc = " - Memory copying is required between LibVLC reference picture buffers and"]
+    #[doc = "   application buffers (between lock and unlock callbacks)."]
+    #[doc = ""]
+    #[doc = " \\param mp the media player"]
+    #[doc = " \\param lock callback to lock video memory (must not be NULL)"]
+    #[doc = " \\param unlock callback to unlock video memory (or NULL if not needed)"]
+    #[doc = " \\param display callback to display video (or NULL if not needed)"]
+    #[doc = " \\param opaque private pointer for the three callbacks (as first parameter)"]
+    #[doc = " \\version LibVLC 1.1.1 or later"]
     pub fn libvlc_video_set_callbacks(
         mp: *mut libvlc_media_player_t,
         lock: libvlc_video_lock_cb,
@@ -2376,6 +3360,20 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Set decoded video chroma and dimensions."]
+    #[doc = " This only works in combination with libvlc_video_set_callbacks(),"]
+    #[doc = " and is mutually exclusive with libvlc_video_set_format_callbacks()."]
+    #[doc = ""]
+    #[doc = " \\param mp the media player"]
+    #[doc = " \\param chroma a four-characters string identifying the chroma"]
+    #[doc = "               (e.g. \"RV32\" or \"YUYV\")"]
+    #[doc = " \\param width pixel width"]
+    #[doc = " \\param height pixel height"]
+    #[doc = " \\param pitch line pitch (in bytes)"]
+    #[doc = " \\version LibVLC 1.1.1 or later"]
+    #[doc = " \\bug All pixel planes are expected to have the same pitch."]
+    #[doc = " To use the YCbCr color space with chrominance subsampling,"]
+    #[doc = " consider using libvlc_video_set_format_callbacks() instead."]
     pub fn libvlc_video_set_format(
         mp: *mut libvlc_media_player_t,
         chroma: *const libc::c_char,
@@ -2385,6 +3383,13 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Set decoded video chroma and dimensions. This only works in combination with"]
+    #[doc = " libvlc_video_set_callbacks()."]
+    #[doc = ""]
+    #[doc = " \\param mp the media player"]
+    #[doc = " \\param setup callback to select the video format (cannot be NULL)"]
+    #[doc = " \\param cleanup callback to release any allocated resources (or NULL)"]
+    #[doc = " \\version LibVLC 2.0.0 or later"]
     pub fn libvlc_video_set_format_callbacks(
         mp: *mut libvlc_media_player_t,
         setup: libvlc_video_format_cb,
@@ -2392,41 +3397,169 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Set the NSView handler where the media player should render its video output."]
+    #[doc = ""]
+    #[doc = " Use the vout called \"macosx\"."]
+    #[doc = ""]
+    #[doc = " The drawable is an NSObject that follow the VLCOpenGLVideoViewEmbedding"]
+    #[doc = " protocol:"]
+    #[doc = ""]
+    #[doc = " @code{.m}"]
+    #[doc = " \\@protocol VLCOpenGLVideoViewEmbedding <NSObject>"]
+    #[doc = " - (void)addVoutSubview:(NSView *)view;"]
+    #[doc = " - (void)removeVoutSubview:(NSView *)view;"]
+    #[doc = " \\@end"]
+    #[doc = " @endcode"]
+    #[doc = ""]
+    #[doc = " Or it can be an NSView object."]
+    #[doc = ""]
+    #[doc = " If you want to use it along with Qt see the QMacCocoaViewContainer. Then"]
+    #[doc = " the following code should work:"]
+    #[doc = " @code{.mm}"]
+    #[doc = " {"]
+    #[doc = "     NSView *video = [[NSView alloc] init];"]
+    #[doc = "     QMacCocoaViewContainer *container = new QMacCocoaViewContainer(video, parent);"]
+    #[doc = "     libvlc_media_player_set_nsobject(mp, video);"]
+    #[doc = "     [video release];"]
+    #[doc = " }"]
+    #[doc = " @endcode"]
+    #[doc = ""]
+    #[doc = " You can find a live example in VLCVideoView in VLCKit.framework."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param drawable the drawable that is either an NSView or an object following"]
+    #[doc = " the VLCOpenGLVideoViewEmbedding protocol."]
     pub fn libvlc_media_player_set_nsobject(
         p_mi: *mut libvlc_media_player_t,
         drawable: *mut libc::c_void,
     );
 }
 extern "C" {
+    #[doc = " Get the NSView handler previously set with libvlc_media_player_set_nsobject()."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return the NSView handler or 0 if none where set"]
     pub fn libvlc_media_player_get_nsobject(p_mi: *mut libvlc_media_player_t) -> *mut libc::c_void;
 }
 extern "C" {
+    #[doc = " Set an X Window System drawable where the media player should render its"]
+    #[doc = " video output. The call takes effect when the playback starts. If it is"]
+    #[doc = " already started, it might need to be stopped before changes apply."]
+    #[doc = " If LibVLC was built without X11 output support, then this function has no"]
+    #[doc = " effects."]
+    #[doc = ""]
+    #[doc = " By default, LibVLC will capture input events on the video rendering area."]
+    #[doc = " Use libvlc_video_set_mouse_input() and libvlc_video_set_key_input() to"]
+    #[doc = " disable that and deliver events to the parent window / to the application"]
+    #[doc = " instead. By design, the X11 protocol delivers input events to only one"]
+    #[doc = " recipient."]
+    #[doc = ""]
+    #[doc = " \\warning"]
+    #[doc = " The application must call the XInitThreads() function from Xlib before"]
+    #[doc = " libvlc_new(), and before any call to XOpenDisplay() directly or via any"]
+    #[doc = " other library. Failure to call XInitThreads() will seriously impede LibVLC"]
+    #[doc = " performance. Calling XOpenDisplay() before XInitThreads() will eventually"]
+    #[doc = " crash the process. That is a limitation of Xlib."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param drawable X11 window ID"]
+    #[doc = ""]
+    #[doc = " \\note"]
+    #[doc = " The specified identifier must correspond to an existing Input/Output class"]
+    #[doc = " X11 window. Pixmaps are <b>not</b> currently supported. The default X11"]
+    #[doc = " server is assumed, i.e. that specified in the DISPLAY environment variable."]
+    #[doc = ""]
+    #[doc = " \\warning"]
+    #[doc = " LibVLC can deal with invalid X11 handle errors, however some display drivers"]
+    #[doc = " (EGL, GLX, VA and/or VDPAU) can unfortunately not. Thus the window handle"]
+    #[doc = " must remain valid until playback is stopped, otherwise the process may"]
+    #[doc = " abort or crash."]
+    #[doc = ""]
+    #[doc = " \\bug"]
+    #[doc = " No more than one window handle per media player instance can be specified."]
+    #[doc = " If the media has multiple simultaneously active video tracks, extra tracks"]
+    #[doc = " will be rendered into external windows beyond the control of the"]
+    #[doc = " application."]
     pub fn libvlc_media_player_set_xwindow(p_mi: *mut libvlc_media_player_t, drawable: u32);
 }
 extern "C" {
+    #[doc = " Get the X Window System window identifier previously set with"]
+    #[doc = " libvlc_media_player_set_xwindow(). Note that this will return the identifier"]
+    #[doc = " even if VLC is not currently using it (for instance if it is playing an"]
+    #[doc = " audio-only input)."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return an X window ID, or 0 if none where set."]
     pub fn libvlc_media_player_get_xwindow(p_mi: *mut libvlc_media_player_t) -> u32;
 }
 extern "C" {
+    #[doc = " Set a Win32/Win64 API window handle (HWND) where the media player should"]
+    #[doc = " render its video output. If LibVLC was built without Win32/Win64 API output"]
+    #[doc = " support, then this has no effects."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param drawable windows handle of the drawable"]
     pub fn libvlc_media_player_set_hwnd(
         p_mi: *mut libvlc_media_player_t,
         drawable: *mut libc::c_void,
     );
 }
 extern "C" {
+    #[doc = " Get the Windows API window handle (HWND) previously set with"]
+    #[doc = " libvlc_media_player_set_hwnd(). The handle will be returned even if LibVLC"]
+    #[doc = " is not currently outputting any video to it."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return a window handle or NULL if there are none."]
     pub fn libvlc_media_player_get_hwnd(p_mi: *mut libvlc_media_player_t) -> *mut libc::c_void;
 }
 extern "C" {
+    #[doc = " Set the android context."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param p_awindow_handler org.videolan.libvlc.AWindow jobject owned by the"]
+    #[doc = "        org.videolan.libvlc.MediaPlayer class from the libvlc-android project."]
     pub fn libvlc_media_player_set_android_context(
         p_mi: *mut libvlc_media_player_t,
         p_awindow_handler: *mut libc::c_void,
     );
 }
 extern "C" {
+    #[doc = " Set the EFL Evas Object."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param p_evas_object a valid EFL Evas Object (Evas_Object)"]
+    #[doc = " \\return -1 if an error was detected, 0 otherwise."]
     pub fn libvlc_media_player_set_evas_object(
         p_mi: *mut libvlc_media_player_t,
         p_evas_object: *mut libc::c_void,
     ) -> libc::c_int;
 }
+#[doc = " Callback prototype for audio playback."]
+#[doc = ""]
+#[doc = " The LibVLC media player decodes and post-processes the audio signal"]
+#[doc = " asynchronously (in an internal thread). Whenever audio samples are ready"]
+#[doc = " to be queued to the output, this callback is invoked."]
+#[doc = ""]
+#[doc = " The number of samples provided per invocation may depend on the file format,"]
+#[doc = " the audio coding algorithm, the decoder plug-in, the post-processing"]
+#[doc = " filters and timing. Application must not assume a certain number of samples."]
+#[doc = ""]
+#[doc = " The exact format of audio samples is determined by libvlc_audio_set_format()"]
+#[doc = " or libvlc_audio_set_format_callbacks() as is the channels layout."]
+#[doc = ""]
+#[doc = " Note that the number of samples is per channel. For instance, if the audio"]
+#[doc = " track sampling rate is 48000 Hz, then 1200 samples represent 25 milliseconds"]
+#[doc = " of audio signal - regardless of the number of audio channels."]
+#[doc = ""]
+#[doc = " \\param data data pointer as passed to libvlc_audio_set_callbacks() [IN]"]
+#[doc = " \\param samples pointer to a table of audio samples to play back [IN]"]
+#[doc = " \\param count number of audio samples to play back"]
+#[doc = " \\param pts expected play time stamp (see libvlc_delay())"]
 pub type libvlc_audio_play_cb = ::core::option::Option<
     unsafe extern "C" fn(
         data: *mut libc::c_void,
@@ -2435,17 +3568,66 @@ pub type libvlc_audio_play_cb = ::core::option::Option<
         pts: i64,
     ),
 >;
+#[doc = " Callback prototype for audio pause."]
+#[doc = ""]
+#[doc = " LibVLC invokes this callback to pause audio playback."]
+#[doc = ""]
+#[doc = " \\note The pause callback is never called if the audio is already paused."]
+#[doc = " \\param data data pointer as passed to libvlc_audio_set_callbacks() [IN]"]
+#[doc = " \\param pts time stamp of the pause request (should be elapsed already)"]
 pub type libvlc_audio_pause_cb =
     ::core::option::Option<unsafe extern "C" fn(data: *mut libc::c_void, pts: i64)>;
+#[doc = " Callback prototype for audio resumption."]
+#[doc = ""]
+#[doc = " LibVLC invokes this callback to resume audio playback after it was"]
+#[doc = " previously paused."]
+#[doc = ""]
+#[doc = " \\note The resume callback is never called if the audio is not paused."]
+#[doc = " \\param data data pointer as passed to libvlc_audio_set_callbacks() [IN]"]
+#[doc = " \\param pts time stamp of the resumption request (should be elapsed already)"]
 pub type libvlc_audio_resume_cb =
     ::core::option::Option<unsafe extern "C" fn(data: *mut libc::c_void, pts: i64)>;
+#[doc = " Callback prototype for audio buffer flush."]
+#[doc = ""]
+#[doc = " LibVLC invokes this callback if it needs to discard all pending buffers and"]
+#[doc = " stop playback as soon as possible. This typically occurs when the media is"]
+#[doc = " stopped."]
+#[doc = ""]
+#[doc = " \\param data data pointer as passed to libvlc_audio_set_callbacks() [IN]"]
 pub type libvlc_audio_flush_cb =
     ::core::option::Option<unsafe extern "C" fn(data: *mut libc::c_void, pts: i64)>;
+#[doc = " Callback prototype for audio buffer drain."]
+#[doc = ""]
+#[doc = " LibVLC may invoke this callback when the decoded audio track is ending."]
+#[doc = " There will be no further decoded samples for the track, but playback should"]
+#[doc = " nevertheless continue until all already pending buffers are rendered."]
+#[doc = ""]
+#[doc = " \\param data data pointer as passed to libvlc_audio_set_callbacks() [IN]"]
 pub type libvlc_audio_drain_cb =
     ::core::option::Option<unsafe extern "C" fn(data: *mut libc::c_void)>;
+#[doc = " Callback prototype for audio volume change."]
+#[doc = " \\param data data pointer as passed to libvlc_audio_set_callbacks() [IN]"]
+#[doc = " \\param volume software volume (1. = nominal, 0. = mute)"]
+#[doc = " \\param mute muted flag"]
 pub type libvlc_audio_set_volume_cb =
     ::core::option::Option<unsafe extern "C" fn(data: *mut libc::c_void, volume: f32, mute: bool)>;
 extern "C" {
+    #[doc = " Sets callbacks and private data for decoded audio."]
+    #[doc = ""]
+    #[doc = " Use libvlc_audio_set_format() or libvlc_audio_set_format_callbacks()"]
+    #[doc = " to configure the decoded audio format."]
+    #[doc = ""]
+    #[doc = " \\note The audio callbacks override any other audio output mechanism."]
+    #[doc = " If the callbacks are set, LibVLC will <b>not</b> output audio in any way."]
+    #[doc = ""]
+    #[doc = " \\param mp the media player"]
+    #[doc = " \\param play callback to play audio samples (must not be NULL)"]
+    #[doc = " \\param pause callback to pause playback (or NULL to ignore)"]
+    #[doc = " \\param resume callback to resume playback (or NULL to ignore)"]
+    #[doc = " \\param flush callback to flush audio buffers (or NULL to ignore)"]
+    #[doc = " \\param drain callback to drain audio buffers (or NULL to ignore)"]
+    #[doc = " \\param opaque private pointer for the audio callbacks (as first parameter)"]
+    #[doc = " \\version LibVLC 2.0.0 or later"]
     pub fn libvlc_audio_set_callbacks(
         mp: *mut libvlc_media_player_t,
         play: libvlc_audio_play_cb,
@@ -2457,11 +3639,29 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Set callbacks and private data for decoded audio. This only works in"]
+    #[doc = " combination with libvlc_audio_set_callbacks()."]
+    #[doc = " Use libvlc_audio_set_format() or libvlc_audio_set_format_callbacks()"]
+    #[doc = " to configure the decoded audio format."]
+    #[doc = ""]
+    #[doc = " \\param mp the media player"]
+    #[doc = " \\param set_volume callback to apply audio volume,"]
+    #[doc = "                   or NULL to apply volume in software"]
+    #[doc = " \\version LibVLC 2.0.0 or later"]
     pub fn libvlc_audio_set_volume_callback(
         mp: *mut libvlc_media_player_t,
         set_volume: libvlc_audio_set_volume_cb,
     );
 }
+#[doc = " Callback prototype to setup the audio playback."]
+#[doc = ""]
+#[doc = " This is called when the media player needs to create a new audio output."]
+#[doc = " \\param opaque pointer to the data pointer passed to"]
+#[doc = "               libvlc_audio_set_callbacks() [IN/OUT]"]
+#[doc = " \\param format 4 bytes sample format [IN/OUT]"]
+#[doc = " \\param rate sample rate [IN/OUT]"]
+#[doc = " \\param channels channels count [IN/OUT]"]
+#[doc = " \\return 0 on success, anything else to skip audio playback"]
 pub type libvlc_audio_setup_cb = ::core::option::Option<
     unsafe extern "C" fn(
         data: *mut *mut libc::c_void,
@@ -2470,9 +3670,21 @@ pub type libvlc_audio_setup_cb = ::core::option::Option<
         channels: *mut libc::c_uint,
     ) -> libc::c_int,
 >;
+#[doc = " Callback prototype for audio playback cleanup."]
+#[doc = ""]
+#[doc = " This is called when the media player no longer needs an audio output."]
+#[doc = " \\param opaque data pointer as passed to libvlc_audio_set_callbacks() [IN]"]
 pub type libvlc_audio_cleanup_cb =
     ::core::option::Option<unsafe extern "C" fn(data: *mut libc::c_void)>;
 extern "C" {
+    #[doc = " Sets decoded audio format via callbacks."]
+    #[doc = ""]
+    #[doc = " This only works in combination with libvlc_audio_set_callbacks()."]
+    #[doc = ""]
+    #[doc = " \\param mp the media player"]
+    #[doc = " \\param setup callback to select the audio format (cannot be NULL)"]
+    #[doc = " \\param cleanup callback to release any allocated resources (or NULL)"]
+    #[doc = " \\version LibVLC 2.0.0 or later"]
     pub fn libvlc_audio_set_format_callbacks(
         mp: *mut libvlc_media_player_t,
         setup: libvlc_audio_setup_cb,
@@ -2480,6 +3692,17 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Sets a fixed decoded audio format."]
+    #[doc = ""]
+    #[doc = " This only works in combination with libvlc_audio_set_callbacks(),"]
+    #[doc = " and is mutually exclusive with libvlc_audio_set_format_callbacks()."]
+    #[doc = ""]
+    #[doc = " \\param mp the media player"]
+    #[doc = " \\param format a four-characters string identifying the sample format"]
+    #[doc = "               (e.g. \"S16N\" or \"f32l\")"]
+    #[doc = " \\param rate sample rate (expressed in Hz)"]
+    #[doc = " \\param channels channels count"]
+    #[doc = " \\version LibVLC 2.0.0 or later"]
     pub fn libvlc_audio_set_format(
         mp: *mut libvlc_media_player_t,
         format: *const libc::c_char,
@@ -2488,85 +3711,202 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Get the current movie length (in ms)."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return the movie length (in ms), or -1 if there is no media."]
     pub fn libvlc_media_player_get_length(p_mi: *mut libvlc_media_player_t) -> libvlc_time_t;
 }
 extern "C" {
+    #[doc = " Get the current movie time (in ms)."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return the movie time (in ms), or -1 if there is no media."]
     pub fn libvlc_media_player_get_time(p_mi: *mut libvlc_media_player_t) -> libvlc_time_t;
 }
 extern "C" {
+    #[doc = " Set the movie time (in ms). This has no effect if no media is being played."]
+    #[doc = " Not all formats and protocols support this."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param i_time the movie time (in ms)."]
     pub fn libvlc_media_player_set_time(p_mi: *mut libvlc_media_player_t, i_time: libvlc_time_t);
 }
 extern "C" {
+    #[doc = " Get movie position as percentage between 0.0 and 1.0."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return movie position, or -1. in case of error"]
     pub fn libvlc_media_player_get_position(p_mi: *mut libvlc_media_player_t) -> f32;
 }
 extern "C" {
+    #[doc = " Set movie position as percentage between 0.0 and 1.0."]
+    #[doc = " This has no effect if playback is not enabled."]
+    #[doc = " This might not work depending on the underlying input format and protocol."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param f_pos the position"]
     pub fn libvlc_media_player_set_position(p_mi: *mut libvlc_media_player_t, f_pos: f32);
 }
 extern "C" {
+    #[doc = " Set movie chapter (if applicable)."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param i_chapter chapter number to play"]
     pub fn libvlc_media_player_set_chapter(
         p_mi: *mut libvlc_media_player_t,
         i_chapter: libc::c_int,
     );
 }
 extern "C" {
+    #[doc = " Get movie chapter."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return chapter number currently playing, or -1 if there is no media."]
     pub fn libvlc_media_player_get_chapter(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get movie chapter count"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return number of chapters in movie, or -1."]
     pub fn libvlc_media_player_get_chapter_count(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Is the player able to play"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return boolean"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_player_will_play(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get title chapter count"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param i_title title"]
+    #[doc = " \\return number of chapters in title, or -1"]
     pub fn libvlc_media_player_get_chapter_count_for_title(
         p_mi: *mut libvlc_media_player_t,
         i_title: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set movie title"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param i_title title number to play"]
     pub fn libvlc_media_player_set_title(p_mi: *mut libvlc_media_player_t, i_title: libc::c_int);
 }
 extern "C" {
+    #[doc = " Get movie title"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return title number currently playing, or -1"]
     pub fn libvlc_media_player_get_title(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get movie title count"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return title number count, or -1"]
     pub fn libvlc_media_player_get_title_count(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set previous chapter (if applicable)"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
     pub fn libvlc_media_player_previous_chapter(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Set next chapter (if applicable)"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
     pub fn libvlc_media_player_next_chapter(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Get the requested movie play rate."]
+    #[doc = " @warning Depending on the underlying media, the requested rate may be"]
+    #[doc = " different from the real playback rate."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return movie play rate"]
     pub fn libvlc_media_player_get_rate(p_mi: *mut libvlc_media_player_t) -> f32;
 }
 extern "C" {
+    #[doc = " Set movie play rate"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param rate movie play rate to set"]
+    #[doc = " \\return -1 if an error was detected, 0 otherwise (but even then, it might"]
+    #[doc = " not actually work depending on the underlying media protocol)"]
     pub fn libvlc_media_player_set_rate(p_mi: *mut libvlc_media_player_t, rate: f32)
         -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get current movie state"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return the current state of the media player (playing, paused, ...) \\see libvlc_state_t"]
     pub fn libvlc_media_player_get_state(p_mi: *mut libvlc_media_player_t) -> libvlc_state_t;
 }
 extern "C" {
+    #[doc = " How many video outputs does this media player have?"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the number of video outputs"]
     pub fn libvlc_media_player_has_vout(p_mi: *mut libvlc_media_player_t) -> libc::c_uint;
 }
 extern "C" {
+    #[doc = " Is this media player seekable?"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return true if the media player can seek"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_player_is_seekable(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Can this media player be paused?"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return true if the media player can pause"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_player_can_pause(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Check if the current program is scrambled"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return true if the current program is scrambled"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_media_player_program_scrambled(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Display the next frame (if supported)"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
     pub fn libvlc_media_player_next_frame(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Navigate through DVD Menu"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\param navigate the Navigation mode"]
+    #[doc = " \\version libVLC 2.0.0 or later"]
     pub fn libvlc_media_player_navigate(p_mi: *mut libvlc_media_player_t, navigate: libc::c_uint);
 }
 extern "C" {
+    #[doc = " Set if, and how, the video title will be shown when media is played."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param position position at which to display the title, or libvlc_position_disable to prevent the title from being displayed"]
+    #[doc = " \\param timeout title display timeout in milliseconds (ignored if libvlc_position_disable)"]
+    #[doc = " \\version libVLC 2.1.0 or later"]
     pub fn libvlc_media_player_set_video_title_display(
         p_mi: *mut libvlc_media_player_t,
         position: libvlc_position_t,
@@ -2574,6 +3914,21 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Add a slave to the current media player."]
+    #[doc = ""]
+    #[doc = " \\note If the player is playing, the slave will be added directly. This call"]
+    #[doc = " will also update the slave list of the attached libvlc_media_t."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_slaves_add"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param i_type subtitle or audio"]
+    #[doc = " \\param psz_uri Uri of the slave (should contain a valid scheme)."]
+    #[doc = " \\param b_select True if this slave should be selected when it's loaded"]
+    #[doc = ""]
+    #[doc = " \\return 0 on success, -1 on error."]
     pub fn libvlc_media_player_add_slave(
         p_mi: *mut libvlc_media_player_t,
         i_type: libvlc_media_slave_type_t,
@@ -2582,26 +3937,82 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Release (free) libvlc_track_description_t"]
+    #[doc = ""]
+    #[doc = " \\param p_track_description the structure to release"]
     pub fn libvlc_track_description_list_release(
         p_track_description: *mut libvlc_track_description_t,
     );
 }
 extern "C" {
+    #[doc = " Toggle fullscreen status on non-embedded video outputs."]
+    #[doc = ""]
+    #[doc = " @warning The same limitations applies to this function"]
+    #[doc = " as to libvlc_set_fullscreen()."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
     pub fn libvlc_toggle_fullscreen(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Enable or disable fullscreen."]
+    #[doc = ""]
+    #[doc = " @warning With most window managers, only a top-level windows can be in"]
+    #[doc = " full-screen mode. Hence, this function will not operate properly if"]
+    #[doc = " libvlc_media_player_set_xwindow() was used to embed the video in a"]
+    #[doc = " non-top-level window. In that case, the embedding window must be reparented"]
+    #[doc = " to the root window <b>before</b> fullscreen mode is enabled. You will want"]
+    #[doc = " to reparent it back to its normal parent when disabling fullscreen."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param b_fullscreen boolean for fullscreen status"]
     pub fn libvlc_set_fullscreen(p_mi: *mut libvlc_media_player_t, b_fullscreen: libc::c_int);
 }
 extern "C" {
+    #[doc = " Get current fullscreen status."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the fullscreen status (boolean)"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_get_fullscreen(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Enable or disable key press events handling, according to the LibVLC hotkeys"]
+    #[doc = " configuration. By default and for historical reasons, keyboard events are"]
+    #[doc = " handled by the LibVLC video widget."]
+    #[doc = ""]
+    #[doc = " \\note On X11, there can be only one subscriber for key press and mouse"]
+    #[doc = " click events per window. If your application has subscribed to those events"]
+    #[doc = " for the X window ID of the video widget, then LibVLC will not be able to"]
+    #[doc = " handle key presses and mouse clicks in any case."]
+    #[doc = ""]
+    #[doc = " \\warning This function is only implemented for X11 and Win32 at the moment."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param on true to handle key press events, false to ignore them."]
     pub fn libvlc_video_set_key_input(p_mi: *mut libvlc_media_player_t, on: libc::c_uint);
 }
 extern "C" {
+    #[doc = " Enable or disable mouse click events handling. By default, those events are"]
+    #[doc = " handled. This is needed for DVD menus to work, as well as a few video"]
+    #[doc = " filters such as \"puzzle\"."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_video_set_key_input()."]
+    #[doc = ""]
+    #[doc = " \\warning This function is only implemented for X11 and Win32 at the moment."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param on true to handle mouse click events, false to ignore them."]
     pub fn libvlc_video_set_mouse_input(p_mi: *mut libvlc_media_player_t, on: libc::c_uint);
 }
 extern "C" {
+    #[doc = " Get the pixel dimensions of a video."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param num number of the video (starting from, and most commonly 0)"]
+    #[doc = " \\param px pointer to get the pixel width [OUT]"]
+    #[doc = " \\param py pointer to get the pixel height [OUT]"]
+    #[doc = " \\return 0 on success, -1 if the specified video does not exist"]
     pub fn libvlc_video_get_size(
         p_mi: *mut libvlc_media_player_t,
         num: libc::c_uint,
@@ -2610,6 +4021,26 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the mouse pointer coordinates over a video."]
+    #[doc = " Coordinates are expressed in terms of the decoded video resolution,"]
+    #[doc = " <b>not</b> in terms of pixels on the screen/viewport (to get the latter,"]
+    #[doc = " you can query your windowing system directly)."]
+    #[doc = ""]
+    #[doc = " Either of the coordinates may be negative or larger than the corresponding"]
+    #[doc = " dimension of the video, if the cursor is outside the rendering area."]
+    #[doc = ""]
+    #[doc = " @warning The coordinates may be out-of-date if the pointer is not located"]
+    #[doc = " on the video rendering area. LibVLC does not track the pointer if it is"]
+    #[doc = " outside of the video widget."]
+    #[doc = ""]
+    #[doc = " @note LibVLC does not support multiple pointers (it does of course support"]
+    #[doc = " multiple input devices sharing the same pointer) at the moment."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param num number of the video (starting from, and most commonly 0)"]
+    #[doc = " \\param px pointer to get the abscissa [OUT]"]
+    #[doc = " \\param py pointer to get the ordinate [OUT]"]
+    #[doc = " \\return 0 on success, -1 if the specified video does not exist"]
     pub fn libvlc_video_get_cursor(
         p_mi: *mut libvlc_media_player_t,
         num: libc::c_uint,
@@ -2618,24 +4049,68 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the current video scaling factor."]
+    #[doc = " See also libvlc_video_set_scale()."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the currently configured zoom factor, or 0. if the video is set"]
+    #[doc = " to fit to the output window/drawable automatically."]
     pub fn libvlc_video_get_scale(p_mi: *mut libvlc_media_player_t) -> f32;
 }
 extern "C" {
+    #[doc = " Set the video scaling factor. That is the ratio of the number of pixels on"]
+    #[doc = " screen to the number of pixels in the original decoded video in each"]
+    #[doc = " dimension. Zero is a special value; it will adjust the video to the output"]
+    #[doc = " window/drawable (in windowed mode) or the entire screen."]
+    #[doc = ""]
+    #[doc = " Note that not all video outputs support scaling."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param f_factor the scaling factor, or zero"]
     pub fn libvlc_video_set_scale(p_mi: *mut libvlc_media_player_t, f_factor: f32);
 }
 extern "C" {
+    #[doc = " Get current video aspect ratio."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the video aspect ratio or NULL if unspecified"]
+    #[doc = " (the result must be released with free() or libvlc_free())."]
     pub fn libvlc_video_get_aspect_ratio(p_mi: *mut libvlc_media_player_t) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Set new video aspect ratio."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param psz_aspect new video aspect-ratio or NULL to reset to default"]
+    #[doc = " \\note Invalid aspect ratios are ignored."]
     pub fn libvlc_video_set_aspect_ratio(
         p_mi: *mut libvlc_media_player_t,
         psz_aspect: *const libc::c_char,
     );
 }
 extern "C" {
+    #[doc = " Create a video viewpoint structure."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later"]
+    #[doc = ""]
+    #[doc = " \\return video viewpoint or NULL"]
+    #[doc = "         (the result must be released with free() or libvlc_free())."]
     pub fn libvlc_video_new_viewpoint() -> *mut libvlc_video_viewpoint_t;
 }
 extern "C" {
+    #[doc = " Update the video viewpoint information."]
+    #[doc = ""]
+    #[doc = " \\note It is safe to call this function before the media player is started."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later"]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param p_viewpoint video viewpoint allocated via libvlc_video_new_viewpoint()"]
+    #[doc = " \\param b_absolute if true replace the old viewpoint with the new one. If"]
+    #[doc = " false, increase/decrease it."]
+    #[doc = " \\return -1 in case of error, 0 otherwise"]
+    #[doc = ""]
+    #[doc = " \\note the values are set asynchronously, it will be used by the next frame displayed."]
     pub fn libvlc_video_update_viewpoint(
         p_mi: *mut libvlc_media_player_t,
         p_viewpoint: *const libvlc_video_viewpoint_t,
@@ -2643,44 +4118,105 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get current video subtitle."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the video subtitle selected, or -1 if none"]
     pub fn libvlc_video_get_spu(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the number of available video subtitles."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the number of available video subtitles"]
     pub fn libvlc_video_get_spu_count(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the description of available video subtitles."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return list containing description of available video subtitles."]
+    #[doc = " It must be freed with libvlc_track_description_list_release()"]
     pub fn libvlc_video_get_spu_description(
         p_mi: *mut libvlc_media_player_t,
     ) -> *mut libvlc_track_description_t;
 }
 extern "C" {
+    #[doc = " Set new video subtitle."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param i_spu video subtitle track to select (i_id from track description)"]
+    #[doc = " \\return 0 on success, -1 if out of range"]
     pub fn libvlc_video_set_spu(
         p_mi: *mut libvlc_media_player_t,
         i_spu: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the current subtitle delay. Positive values means subtitles are being"]
+    #[doc = " displayed later, negative values earlier."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return time (in microseconds) the display of subtitles is being delayed"]
+    #[doc = " \\version LibVLC 2.0.0 or later"]
     pub fn libvlc_video_get_spu_delay(p_mi: *mut libvlc_media_player_t) -> i64;
 }
 extern "C" {
+    #[doc = " Set the subtitle delay. This affects the timing of when the subtitle will"]
+    #[doc = " be displayed. Positive values result in subtitles being displayed later,"]
+    #[doc = " while negative values will result in subtitles being displayed earlier."]
+    #[doc = ""]
+    #[doc = " The subtitle delay will be reset to zero each time the media changes."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param i_delay time (in microseconds) the display of subtitles should be delayed"]
+    #[doc = " \\return 0 on success, -1 on error"]
+    #[doc = " \\version LibVLC 2.0.0 or later"]
     pub fn libvlc_video_set_spu_delay(
         p_mi: *mut libvlc_media_player_t,
         i_delay: i64,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the full description of available titles"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param titles address to store an allocated array of title descriptions"]
+    #[doc = "        descriptions (must be freed with libvlc_title_descriptions_release()"]
+    #[doc = "        by the caller) [OUT]"]
+    #[doc = ""]
+    #[doc = " \\return the number of titles (-1 on error)"]
     pub fn libvlc_media_player_get_full_title_descriptions(
         p_mi: *mut libvlc_media_player_t,
         titles: *mut *mut *mut libvlc_title_description_t,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Release a title description"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later"]
+    #[doc = ""]
+    #[doc = " \\param p_titles title description array to release"]
+    #[doc = " \\param i_count number of title descriptions to release"]
     pub fn libvlc_title_descriptions_release(
         p_titles: *mut *mut libvlc_title_description_t,
         i_count: libc::c_uint,
     );
 }
 extern "C" {
+    #[doc = " Get the full description of available chapters"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param i_chapters_of_title index of the title to query for chapters (uses current title if set to -1)"]
+    #[doc = " \\param pp_chapters address to store an allocated array of chapter descriptions"]
+    #[doc = "        descriptions (must be freed with libvlc_chapter_descriptions_release()"]
+    #[doc = "        by the caller) [OUT]"]
+    #[doc = ""]
+    #[doc = " \\return the number of chapters (-1 on error)"]
     pub fn libvlc_media_player_get_full_chapter_descriptions(
         p_mi: *mut libvlc_media_player_t,
         i_chapters_of_title: libc::c_int,
@@ -2688,44 +4224,109 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Release a chapter description"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later"]
+    #[doc = ""]
+    #[doc = " \\param p_chapters chapter description array to release"]
+    #[doc = " \\param i_count number of chapter descriptions to release"]
     pub fn libvlc_chapter_descriptions_release(
         p_chapters: *mut *mut libvlc_chapter_description_t,
         i_count: libc::c_uint,
     );
 }
 extern "C" {
+    #[doc = " Get current crop filter geometry."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the crop filter geometry or NULL if unset"]
     pub fn libvlc_video_get_crop_geometry(p_mi: *mut libvlc_media_player_t) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Set new crop filter geometry."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param psz_geometry new crop filter geometry (NULL to unset)"]
     pub fn libvlc_video_set_crop_geometry(
         p_mi: *mut libvlc_media_player_t,
         psz_geometry: *const libc::c_char,
     );
 }
 extern "C" {
+    #[doc = " Get current teletext page requested or 0 if it's disabled."]
+    #[doc = ""]
+    #[doc = " Teletext is disabled by default, call libvlc_video_set_teletext() to enable"]
+    #[doc = " it."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the current teletext page requested."]
     pub fn libvlc_video_get_teletext(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get currently showing teletext page or 0 if it's disabled."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the current teletext page requested."]
+    pub fn libvlc_video_get_teletext_active(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
+}
+extern "C" {
+    #[doc = " Set new teletext page to retrieve."]
+    #[doc = ""]
+    #[doc = " This function can also be used to send a teletext key."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param i_page teletex page number requested. This value can be 0 to disable"]
+    #[doc = " teletext, a number in the range ]0;1000[ to show the requested page, or a"]
+    #[doc = " \\ref libvlc_teletext_key_t. 100 is the default teletext page."]
     pub fn libvlc_video_set_teletext(p_mi: *mut libvlc_media_player_t, i_page: libc::c_int);
 }
 extern "C" {
+    #[doc = " Get number of available video tracks."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the number of available video tracks (int)"]
     pub fn libvlc_video_get_track_count(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the description of available video tracks."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return list with description of available video tracks, or NULL on error."]
+    #[doc = " It must be freed with libvlc_track_description_list_release()"]
     pub fn libvlc_video_get_track_description(
         p_mi: *mut libvlc_media_player_t,
     ) -> *mut libvlc_track_description_t;
 }
 extern "C" {
+    #[doc = " Get current video track."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the video track ID (int) or -1 if no active input"]
     pub fn libvlc_video_get_track(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set video track."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param i_track the track ID (i_id field from track description)"]
+    #[doc = " \\return 0 on success, -1 if out of range"]
     pub fn libvlc_video_set_track(
         p_mi: *mut libvlc_media_player_t,
         i_track: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Take a snapshot of the current video window."]
+    #[doc = ""]
+    #[doc = " If i_width AND i_height is 0, original size is used."]
+    #[doc = " If i_width XOR i_height is 0, original aspect-ratio is preserved."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player instance"]
+    #[doc = " \\param num number of video output (typically 0 for the first/only one)"]
+    #[doc = " \\param psz_filepath the path of a file or a folder to save the screenshot into"]
+    #[doc = " \\param i_width the snapshot's width"]
+    #[doc = " \\param i_height the snapshot's height"]
+    #[doc = " \\return 0 on success, -1 if the video was not found"]
     pub fn libvlc_video_take_snapshot(
         p_mi: *mut libvlc_media_player_t,
         num: libc::c_uint,
@@ -2735,24 +4336,44 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Enable or disable deinterlace filter"]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player"]
+    #[doc = " \\param psz_mode type of deinterlace filter, NULL to disable"]
     pub fn libvlc_video_set_deinterlace(
         p_mi: *mut libvlc_media_player_t,
         psz_mode: *const libc::c_char,
     );
 }
 extern "C" {
+    #[doc = " Get an integer marquee option value"]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player"]
+    #[doc = " \\param option marq option to get \\see libvlc_video_marquee_int_option_t"]
     pub fn libvlc_video_get_marquee_int(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get a string marquee option value"]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player"]
+    #[doc = " \\param option marq option to get \\see libvlc_video_marquee_string_option_t"]
     pub fn libvlc_video_get_marquee_string(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
     ) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Enable, disable or set an integer marquee option"]
+    #[doc = ""]
+    #[doc = " Setting libvlc_marquee_Enable has the side effect of enabling (arg !0)"]
+    #[doc = " or disabling (arg 0) the marq filter."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player"]
+    #[doc = " \\param option marq option to set \\see libvlc_video_marquee_int_option_t"]
+    #[doc = " \\param i_val marq option value"]
     pub fn libvlc_video_set_marquee_int(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
@@ -2760,6 +4381,11 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Set a marquee string option"]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player"]
+    #[doc = " \\param option marq option to set \\see libvlc_video_marquee_string_option_t"]
+    #[doc = " \\param psz_text marq option value"]
     pub fn libvlc_video_set_marquee_string(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
@@ -2767,6 +4393,7 @@ extern "C" {
     );
 }
 pub const libvlc_video_logo_option_t_libvlc_logo_enable: libvlc_video_logo_option_t = 0;
+#[doc = "< string argument, \"file,d,t;file,d,t;...\""]
 pub const libvlc_video_logo_option_t_libvlc_logo_file: libvlc_video_logo_option_t = 1;
 pub const libvlc_video_logo_option_t_libvlc_logo_x: libvlc_video_logo_option_t = 2;
 pub const libvlc_video_logo_option_t_libvlc_logo_y: libvlc_video_logo_option_t = 3;
@@ -2774,14 +4401,27 @@ pub const libvlc_video_logo_option_t_libvlc_logo_delay: libvlc_video_logo_option
 pub const libvlc_video_logo_option_t_libvlc_logo_repeat: libvlc_video_logo_option_t = 5;
 pub const libvlc_video_logo_option_t_libvlc_logo_opacity: libvlc_video_logo_option_t = 6;
 pub const libvlc_video_logo_option_t_libvlc_logo_position: libvlc_video_logo_option_t = 7;
+#[doc = " option values for libvlc_video_{get,set}_logo_{int,string}"]
 pub type libvlc_video_logo_option_t = libc::c_uint;
 extern "C" {
+    #[doc = " Get integer logo option."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player instance"]
+    #[doc = " \\param option logo option to get, values of libvlc_video_logo_option_t"]
     pub fn libvlc_video_get_logo_int(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set logo option as integer. Options that take a different type value"]
+    #[doc = " are ignored."]
+    #[doc = " Passing libvlc_logo_enable as option value has the side effect of"]
+    #[doc = " starting (arg !0) or stopping (arg 0) the logo filter."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player instance"]
+    #[doc = " \\param option logo option to set, values of libvlc_video_logo_option_t"]
+    #[doc = " \\param value logo option value"]
     pub fn libvlc_video_set_logo_int(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
@@ -2789,6 +4429,12 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Set logo option as string. Options that take a different type value"]
+    #[doc = " are ignored."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player instance"]
+    #[doc = " \\param option logo option to set, values of libvlc_video_logo_option_t"]
+    #[doc = " \\param psz_value logo option value"]
     pub fn libvlc_video_set_logo_string(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
@@ -2801,14 +4447,29 @@ pub const libvlc_video_adjust_option_t_libvlc_adjust_Brightness: libvlc_video_ad
 pub const libvlc_video_adjust_option_t_libvlc_adjust_Hue: libvlc_video_adjust_option_t = 3;
 pub const libvlc_video_adjust_option_t_libvlc_adjust_Saturation: libvlc_video_adjust_option_t = 4;
 pub const libvlc_video_adjust_option_t_libvlc_adjust_Gamma: libvlc_video_adjust_option_t = 5;
+#[doc = " option values for libvlc_video_{get,set}_adjust_{int,float,bool}"]
 pub type libvlc_video_adjust_option_t = libc::c_uint;
 extern "C" {
+    #[doc = " Get integer adjust option."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player instance"]
+    #[doc = " \\param option adjust option to get, values of libvlc_video_adjust_option_t"]
+    #[doc = " \\version LibVLC 1.1.1 and later."]
     pub fn libvlc_video_get_adjust_int(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set adjust option as integer. Options that take a different type value"]
+    #[doc = " are ignored."]
+    #[doc = " Passing libvlc_adjust_enable as option value has the side effect of"]
+    #[doc = " starting (arg !0) or stopping (arg 0) the adjust filter."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player instance"]
+    #[doc = " \\param option adust option to set, values of libvlc_video_adjust_option_t"]
+    #[doc = " \\param value adjust option value"]
+    #[doc = " \\version LibVLC 1.1.1 and later."]
     pub fn libvlc_video_set_adjust_int(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
@@ -2816,12 +4477,24 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Get float adjust option."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player instance"]
+    #[doc = " \\param option adjust option to get, values of libvlc_video_adjust_option_t"]
+    #[doc = " \\version LibVLC 1.1.1 and later."]
     pub fn libvlc_video_get_adjust_float(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
     ) -> f32;
 }
 extern "C" {
+    #[doc = " Set adjust option as float. Options that take a different type value"]
+    #[doc = " are ignored."]
+    #[doc = ""]
+    #[doc = " \\param p_mi libvlc media player instance"]
+    #[doc = " \\param option adust option to set, values of libvlc_video_adjust_option_t"]
+    #[doc = " \\param value adjust option value"]
+    #[doc = " \\version LibVLC 1.1.1 and later."]
     pub fn libvlc_video_set_adjust_float(
         p_mi: *mut libvlc_media_player_t,
         option: libc::c_uint,
@@ -2846,6 +4519,7 @@ pub const libvlc_audio_output_device_types_t_libvlc_AudioOutputDevice_7_1:
     libvlc_audio_output_device_types_t = 8;
 pub const libvlc_audio_output_device_types_t_libvlc_AudioOutputDevice_SPDIF:
     libvlc_audio_output_device_types_t = 10;
+#[doc = " Audio device types"]
 pub type libvlc_audio_output_device_types_t = libc::c_int;
 pub const libvlc_audio_output_channel_t_libvlc_AudioChannel_Error: libvlc_audio_output_channel_t =
     -1;
@@ -2858,36 +4532,128 @@ pub const libvlc_audio_output_channel_t_libvlc_AudioChannel_Right: libvlc_audio_
     4;
 pub const libvlc_audio_output_channel_t_libvlc_AudioChannel_Dolbys: libvlc_audio_output_channel_t =
     5;
+#[doc = " Audio channels"]
 pub type libvlc_audio_output_channel_t = libc::c_int;
 extern "C" {
+    #[doc = " Gets the list of available audio output modules."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\return list of available audio outputs. It must be freed with"]
+    #[doc = "          \\see libvlc_audio_output_list_release \\see libvlc_audio_output_t ."]
+    #[doc = "         In case of error, NULL is returned."]
     pub fn libvlc_audio_output_list_get(
         p_instance: *mut libvlc_instance_t,
     ) -> *mut libvlc_audio_output_t;
 }
 extern "C" {
+    #[doc = " Frees the list of available audio output modules."]
+    #[doc = ""]
+    #[doc = " \\param p_list list with audio outputs for release"]
     pub fn libvlc_audio_output_list_release(p_list: *mut libvlc_audio_output_t);
 }
 extern "C" {
+    #[doc = " Selects an audio output module."]
+    #[doc = " \\note Any change will take be effect only after playback is stopped and"]
+    #[doc = " restarted. Audio output cannot be changed while playing."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param psz_name name of audio output,"]
+    #[doc = "               use psz_name of \\see libvlc_audio_output_t"]
+    #[doc = " \\return 0 if function succeeded, -1 on error"]
     pub fn libvlc_audio_output_set(
         p_mi: *mut libvlc_media_player_t,
         psz_name: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Gets a list of potential audio output devices,"]
+    #[doc = " \\see libvlc_audio_output_device_set()."]
+    #[doc = ""]
+    #[doc = " \\note Not all audio outputs support enumerating devices."]
+    #[doc = " The audio output may be functional even if the list is empty (NULL)."]
+    #[doc = ""]
+    #[doc = " \\note The list may not be exhaustive."]
+    #[doc = ""]
+    #[doc = " \\warning Some audio output devices in the list might not actually work in"]
+    #[doc = " some circumstances. By default, it is recommended to not specify any"]
+    #[doc = " explicit audio device."]
+    #[doc = ""]
+    #[doc = " \\param mp media player"]
+    #[doc = " \\return A NULL-terminated linked list of potential audio output devices."]
+    #[doc = " It must be freed with libvlc_audio_output_device_list_release()"]
+    #[doc = " \\version LibVLC 2.2.0 or later."]
     pub fn libvlc_audio_output_device_enum(
         mp: *mut libvlc_media_player_t,
     ) -> *mut libvlc_audio_output_device_t;
 }
 extern "C" {
+    #[doc = " Gets a list of audio output devices for a given audio output module,"]
+    #[doc = " \\see libvlc_audio_output_device_set()."]
+    #[doc = ""]
+    #[doc = " \\note Not all audio outputs support this. In particular, an empty (NULL)"]
+    #[doc = " list of devices does <b>not</b> imply that the specified audio output does"]
+    #[doc = " not work."]
+    #[doc = ""]
+    #[doc = " \\note The list might not be exhaustive."]
+    #[doc = ""]
+    #[doc = " \\warning Some audio output devices in the list might not actually work in"]
+    #[doc = " some circumstances. By default, it is recommended to not specify any"]
+    #[doc = " explicit audio device."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\param aout audio output name"]
+    #[doc = "                 (as returned by libvlc_audio_output_list_get())"]
+    #[doc = " \\return A NULL-terminated linked list of potential audio output devices."]
+    #[doc = " It must be freed with libvlc_audio_output_device_list_release()"]
+    #[doc = " \\version LibVLC 2.1.0 or later."]
     pub fn libvlc_audio_output_device_list_get(
         p_instance: *mut libvlc_instance_t,
         aout: *const libc::c_char,
     ) -> *mut libvlc_audio_output_device_t;
 }
 extern "C" {
+    #[doc = " Frees a list of available audio output devices."]
+    #[doc = ""]
+    #[doc = " \\param p_list list with audio outputs for release"]
+    #[doc = " \\version LibVLC 2.1.0 or later."]
     pub fn libvlc_audio_output_device_list_release(p_list: *mut libvlc_audio_output_device_t);
 }
 extern "C" {
+    #[doc = " Configures an explicit audio output device."]
+    #[doc = ""]
+    #[doc = " If the module paramater is NULL, audio output will be moved to the device"]
+    #[doc = " specified by the device identifier string immediately. This is the"]
+    #[doc = " recommended usage."]
+    #[doc = ""]
+    #[doc = " A list of adequate potential device strings can be obtained with"]
+    #[doc = " libvlc_audio_output_device_enum()."]
+    #[doc = ""]
+    #[doc = " However passing NULL is supported in LibVLC version 2.2.0 and later only;"]
+    #[doc = " in earlier versions, this function would have no effects when the module"]
+    #[doc = " parameter was NULL."]
+    #[doc = ""]
+    #[doc = " If the module parameter is not NULL, the device parameter of the"]
+    #[doc = " corresponding audio output, if it exists, will be set to the specified"]
+    #[doc = " string. Note that some audio output modules do not have such a parameter"]
+    #[doc = " (notably MMDevice and PulseAudio)."]
+    #[doc = ""]
+    #[doc = " A list of adequate potential device strings can be obtained with"]
+    #[doc = " libvlc_audio_output_device_list_get()."]
+    #[doc = ""]
+    #[doc = " \\note This function does not select the specified audio output plugin."]
+    #[doc = " libvlc_audio_output_set() is used for that purpose."]
+    #[doc = ""]
+    #[doc = " \\warning The syntax for the device parameter depends on the audio output."]
+    #[doc = ""]
+    #[doc = " Some audio output modules require further parameters (e.g. a channels map"]
+    #[doc = " in the case of ALSA)."]
+    #[doc = ""]
+    #[doc = " \\param mp media player"]
+    #[doc = " \\param module If NULL, current audio output module."]
+    #[doc = "               if non-NULL, name of audio output module"]
+    #[doc = "(\\see libvlc_audio_output_t)"]
+    #[doc = " \\param device_id device identifier string"]
+    #[doc = " \\return Nothing. Errors are ignored (this is a design bug)."]
     pub fn libvlc_audio_output_device_set(
         mp: *mut libvlc_media_player_t,
         module: *const libc::c_char,
@@ -2895,90 +4661,262 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Get the current audio output device identifier."]
+    #[doc = ""]
+    #[doc = " This complements libvlc_audio_output_device_set()."]
+    #[doc = ""]
+    #[doc = " \\warning The initial value for the current audio output device identifier"]
+    #[doc = " may not be set or may be some unknown value. A LibVLC application should"]
+    #[doc = " compare this value against the known device identifiers (e.g. those that"]
+    #[doc = " were previously retrieved by a call to libvlc_audio_output_device_enum or"]
+    #[doc = " libvlc_audio_output_device_list_get) to find the current audio output device."]
+    #[doc = ""]
+    #[doc = " It is possible that the selected audio output device changes (an external"]
+    #[doc = " change) without a call to libvlc_audio_output_device_set. That may make this"]
+    #[doc = " method unsuitable to use if a LibVLC application is attempting to track"]
+    #[doc = " dynamic audio device changes as they happen."]
+    #[doc = ""]
+    #[doc = " \\param mp media player"]
+    #[doc = " \\return the current audio output device identifier"]
+    #[doc = "         NULL if no device is selected or in case of error"]
+    #[doc = "         (the result must be released with free() or libvlc_free())."]
+    #[doc = " \\version LibVLC 3.0.0 or later."]
     pub fn libvlc_audio_output_device_get(mp: *mut libvlc_media_player_t) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Toggle mute status."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\warning Toggling mute atomically is not always possible: On some platforms,"]
+    #[doc = " other processes can mute the VLC audio playback stream asynchronously. Thus,"]
+    #[doc = " there is a small race condition where toggling will not work."]
+    #[doc = " See also the limitations of libvlc_audio_set_mute()."]
     pub fn libvlc_audio_toggle_mute(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Get current mute status."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the mute status (boolean) if defined, -1 if undefined/unapplicable"]
     pub fn libvlc_audio_get_mute(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set mute status."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param status If status is true then mute, otherwise unmute"]
+    #[doc = " \\warning This function does not always work. If there are no active audio"]
+    #[doc = " playback stream, the mute status might not be available. If digital"]
+    #[doc = " pass-through (S/PDIF, HDMI...) is in use, muting may be unapplicable. Also"]
+    #[doc = " some audio output plugins do not support muting at all."]
+    #[doc = " \\note To force silent playback, disable all audio tracks. This is more"]
+    #[doc = " efficient and reliable than mute."]
     pub fn libvlc_audio_set_mute(p_mi: *mut libvlc_media_player_t, status: libc::c_int);
 }
 extern "C" {
+    #[doc = " Get current software audio volume."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the software volume in percents"]
+    #[doc = " (0 = mute, 100 = nominal / 0dB)"]
     pub fn libvlc_audio_get_volume(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set current software audio volume."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param i_volume the volume in percents (0 = mute, 100 = 0dB)"]
+    #[doc = " \\return 0 if the volume was set, -1 if it was out of range"]
     pub fn libvlc_audio_set_volume(
         p_mi: *mut libvlc_media_player_t,
         i_volume: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get number of available audio tracks."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the number of available audio tracks (int), or -1 if unavailable"]
     pub fn libvlc_audio_get_track_count(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the description of available audio tracks."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return list with description of available audio tracks, or NULL."]
+    #[doc = " It must be freed with libvlc_track_description_list_release()"]
     pub fn libvlc_audio_get_track_description(
         p_mi: *mut libvlc_media_player_t,
     ) -> *mut libvlc_track_description_t;
 }
 extern "C" {
+    #[doc = " Get current audio track."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the audio track ID or -1 if no active input."]
     pub fn libvlc_audio_get_track(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set current audio track."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param i_track the track ID (i_id field from track description)"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_audio_set_track(
         p_mi: *mut libvlc_media_player_t,
         i_track: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get current audio channel."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the audio channel \\see libvlc_audio_output_channel_t"]
     pub fn libvlc_audio_get_channel(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set current audio channel."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param channel the audio channel, \\see libvlc_audio_output_channel_t"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_audio_set_channel(
         p_mi: *mut libvlc_media_player_t,
         channel: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get current audio delay."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the audio delay (microseconds)"]
+    #[doc = " \\version LibVLC 1.1.1 or later"]
     pub fn libvlc_audio_get_delay(p_mi: *mut libvlc_media_player_t) -> i64;
 }
 extern "C" {
+    #[doc = " Set current audio delay. The audio delay will be reset to zero each time the media changes."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param i_delay the audio delay (microseconds)"]
+    #[doc = " \\return 0 on success, -1 on error"]
+    #[doc = " \\version LibVLC 1.1.1 or later"]
     pub fn libvlc_audio_set_delay(p_mi: *mut libvlc_media_player_t, i_delay: i64) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the number of equalizer presets."]
+    #[doc = ""]
+    #[doc = " \\return number of presets"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_get_preset_count() -> libc::c_uint;
 }
 extern "C" {
+    #[doc = " Get the name of a particular equalizer preset."]
+    #[doc = ""]
+    #[doc = " This name can be used, for example, to prepare a preset label or menu in a user"]
+    #[doc = " interface."]
+    #[doc = ""]
+    #[doc = " \\param u_index index of the preset, counting from zero"]
+    #[doc = " \\return preset name, or NULL if there is no such preset"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_get_preset_name(u_index: libc::c_uint) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Get the number of distinct frequency bands for an equalizer."]
+    #[doc = ""]
+    #[doc = " \\return number of frequency bands"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_get_band_count() -> libc::c_uint;
 }
 extern "C" {
+    #[doc = " Get a particular equalizer band frequency."]
+    #[doc = ""]
+    #[doc = " This value can be used, for example, to create a label for an equalizer band control"]
+    #[doc = " in a user interface."]
+    #[doc = ""]
+    #[doc = " \\param u_index index of the band, counting from zero"]
+    #[doc = " \\return equalizer band frequency (Hz), or -1 if there is no such band"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_get_band_frequency(u_index: libc::c_uint) -> f32;
 }
 extern "C" {
+    #[doc = " Create a new default equalizer, with all frequency values zeroed."]
+    #[doc = ""]
+    #[doc = " The new equalizer can subsequently be applied to a media player by invoking"]
+    #[doc = " libvlc_media_player_set_equalizer()."]
+    #[doc = ""]
+    #[doc = " The returned handle should be freed via libvlc_audio_equalizer_release() when"]
+    #[doc = " it is no longer needed."]
+    #[doc = ""]
+    #[doc = " \\return opaque equalizer handle, or NULL on error"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_new() -> *mut libvlc_equalizer_t;
 }
 extern "C" {
+    #[doc = " Create a new equalizer, with initial frequency values copied from an existing"]
+    #[doc = " preset."]
+    #[doc = ""]
+    #[doc = " The new equalizer can subsequently be applied to a media player by invoking"]
+    #[doc = " libvlc_media_player_set_equalizer()."]
+    #[doc = ""]
+    #[doc = " The returned handle should be freed via libvlc_audio_equalizer_release() when"]
+    #[doc = " it is no longer needed."]
+    #[doc = ""]
+    #[doc = " \\param u_index index of the preset, counting from zero"]
+    #[doc = " \\return opaque equalizer handle, or NULL on error"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_new_from_preset(u_index: libc::c_uint)
         -> *mut libvlc_equalizer_t;
 }
 extern "C" {
+    #[doc = " Release a previously created equalizer instance."]
+    #[doc = ""]
+    #[doc = " The equalizer was previously created by using libvlc_audio_equalizer_new() or"]
+    #[doc = " libvlc_audio_equalizer_new_from_preset()."]
+    #[doc = ""]
+    #[doc = " It is safe to invoke this method with a NULL p_equalizer parameter for no effect."]
+    #[doc = ""]
+    #[doc = " \\param p_equalizer opaque equalizer handle, or NULL"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_release(p_equalizer: *mut libvlc_equalizer_t);
 }
 extern "C" {
+    #[doc = " Set a new pre-amplification value for an equalizer."]
+    #[doc = ""]
+    #[doc = " The new equalizer settings are subsequently applied to a media player by invoking"]
+    #[doc = " libvlc_media_player_set_equalizer()."]
+    #[doc = ""]
+    #[doc = " The supplied amplification value will be clamped to the -20.0 to +20.0 range."]
+    #[doc = ""]
+    #[doc = " \\param p_equalizer valid equalizer handle, must not be NULL"]
+    #[doc = " \\param f_preamp preamp value (-20.0 to 20.0 Hz)"]
+    #[doc = " \\return zero on success, -1 on error"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_set_preamp(
         p_equalizer: *mut libvlc_equalizer_t,
         f_preamp: f32,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the current pre-amplification value from an equalizer."]
+    #[doc = ""]
+    #[doc = " \\param p_equalizer valid equalizer handle, must not be NULL"]
+    #[doc = " \\return preamp value (Hz)"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_get_preamp(p_equalizer: *mut libvlc_equalizer_t) -> f32;
 }
 extern "C" {
+    #[doc = " Set a new amplification value for a particular equalizer frequency band."]
+    #[doc = ""]
+    #[doc = " The new equalizer settings are subsequently applied to a media player by invoking"]
+    #[doc = " libvlc_media_player_set_equalizer()."]
+    #[doc = ""]
+    #[doc = " The supplied amplification value will be clamped to the -20.0 to +20.0 range."]
+    #[doc = ""]
+    #[doc = " \\param p_equalizer valid equalizer handle, must not be NULL"]
+    #[doc = " \\param f_amp amplification value (-20.0 to 20.0 Hz)"]
+    #[doc = " \\param u_band index, counting from zero, of the frequency band to set"]
+    #[doc = " \\return zero on success, -1 on error"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_set_amp_at_index(
         p_equalizer: *mut libvlc_equalizer_t,
         f_amp: f32,
@@ -2986,60 +4924,158 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the amplification value for a particular equalizer frequency band."]
+    #[doc = ""]
+    #[doc = " \\param p_equalizer valid equalizer handle, must not be NULL"]
+    #[doc = " \\param u_band index, counting from zero, of the frequency band to get"]
+    #[doc = " \\return amplification value (Hz); NaN if there is no such frequency band"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_audio_equalizer_get_amp_at_index(
         p_equalizer: *mut libvlc_equalizer_t,
         u_band: libc::c_uint,
     ) -> f32;
 }
 extern "C" {
+    #[doc = " Apply new equalizer settings to a media player."]
+    #[doc = ""]
+    #[doc = " The equalizer is first created by invoking libvlc_audio_equalizer_new() or"]
+    #[doc = " libvlc_audio_equalizer_new_from_preset()."]
+    #[doc = ""]
+    #[doc = " It is possible to apply new equalizer settings to a media player whether the media"]
+    #[doc = " player is currently playing media or not."]
+    #[doc = ""]
+    #[doc = " Invoking this method will immediately apply the new equalizer settings to the audio"]
+    #[doc = " output of the currently playing media if there is any."]
+    #[doc = ""]
+    #[doc = " If there is no currently playing media, the new equalizer settings will be applied"]
+    #[doc = " later if and when new media is played."]
+    #[doc = ""]
+    #[doc = " Equalizer settings will automatically be applied to subsequently played media."]
+    #[doc = ""]
+    #[doc = " To disable the equalizer for a media player invoke this method passing NULL for the"]
+    #[doc = " p_equalizer parameter."]
+    #[doc = ""]
+    #[doc = " The media player does not keep a reference to the supplied equalizer so it is safe"]
+    #[doc = " for an application to release the equalizer reference any time after this method"]
+    #[doc = " returns."]
+    #[doc = ""]
+    #[doc = " \\param p_mi opaque media player handle"]
+    #[doc = " \\param p_equalizer opaque equalizer handle, or NULL to disable the equalizer for this media player"]
+    #[doc = " \\return zero on success, -1 on error"]
+    #[doc = " \\version LibVLC 2.2.0 or later"]
     pub fn libvlc_media_player_set_equalizer(
         p_mi: *mut libvlc_media_player_t,
         p_equalizer: *mut libvlc_equalizer_t,
     ) -> libc::c_int;
 }
+#[doc = "< Don't use a media player role"]
 pub const libvlc_media_player_role_libvlc_role_None: libvlc_media_player_role = 0;
+#[doc = "< Music (or radio) playback"]
 pub const libvlc_media_player_role_libvlc_role_Music: libvlc_media_player_role = 1;
+#[doc = "< Video playback"]
 pub const libvlc_media_player_role_libvlc_role_Video: libvlc_media_player_role = 2;
+#[doc = "< Speech, real-time communication"]
 pub const libvlc_media_player_role_libvlc_role_Communication: libvlc_media_player_role = 3;
+#[doc = "< Video game"]
 pub const libvlc_media_player_role_libvlc_role_Game: libvlc_media_player_role = 4;
+#[doc = "< User interaction feedback"]
 pub const libvlc_media_player_role_libvlc_role_Notification: libvlc_media_player_role = 5;
+#[doc = "< Embedded animation (e.g. in web page)"]
 pub const libvlc_media_player_role_libvlc_role_Animation: libvlc_media_player_role = 6;
+#[doc = "< Audio editting/production"]
 pub const libvlc_media_player_role_libvlc_role_Production: libvlc_media_player_role = 7;
+#[doc = "< Accessibility"]
 pub const libvlc_media_player_role_libvlc_role_Accessibility: libvlc_media_player_role = 8;
 pub const libvlc_media_player_role_libvlc_role_Test: libvlc_media_player_role = 9;
+#[doc = " Media player roles."]
+#[doc = ""]
+#[doc = " \\version LibVLC 3.0.0 and later."]
+#[doc = ""]
+#[doc = " See \\ref libvlc_media_player_set_role()"]
 pub type libvlc_media_player_role = libc::c_uint;
+#[doc = " Media player roles."]
+#[doc = ""]
+#[doc = " \\version LibVLC 3.0.0 and later."]
+#[doc = ""]
+#[doc = " See \\ref libvlc_media_player_set_role()"]
 pub use self::libvlc_media_player_role as libvlc_media_player_role_t;
 extern "C" {
+    #[doc = " Gets the media role."]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\return the media player role (\\ref libvlc_media_player_role_t)"]
     pub fn libvlc_media_player_get_role(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Sets the media role."]
+    #[doc = ""]
+    #[doc = " \\param p_mi media player"]
+    #[doc = " \\param role the media player role (\\ref libvlc_media_player_role_t)"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_media_player_set_role(
         p_mi: *mut libvlc_media_player_t,
         role: libc::c_uint,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Create an empty media list."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\return empty media list, or NULL on error"]
     pub fn libvlc_media_list_new(p_instance: *mut libvlc_instance_t) -> *mut libvlc_media_list_t;
 }
 extern "C" {
+    #[doc = " Release media list created with libvlc_media_list_new()."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list created with libvlc_media_list_new()"]
     pub fn libvlc_media_list_release(p_ml: *mut libvlc_media_list_t);
 }
 extern "C" {
+    #[doc = " Retain reference to a media list"]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list created with libvlc_media_list_new()"]
     pub fn libvlc_media_list_retain(p_ml: *mut libvlc_media_list_t);
 }
 extern "C" {
+    #[doc = " Associate media instance with this media list instance."]
+    #[doc = " If another media instance was present it will be released."]
+    #[doc = " The libvlc_media_list_lock should NOT be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\param p_md media instance to add"]
     pub fn libvlc_media_list_set_media(p_ml: *mut libvlc_media_list_t, p_md: *mut libvlc_media_t);
 }
 extern "C" {
+    #[doc = " Get media instance from this media list instance. This action will increase"]
+    #[doc = " the refcount on the media instance."]
+    #[doc = " The libvlc_media_list_lock should NOT be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\return media instance"]
     pub fn libvlc_media_list_media(p_ml: *mut libvlc_media_list_t) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Add media instance to media list"]
+    #[doc = " The libvlc_media_list_lock should be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\param p_md a media instance"]
+    #[doc = " \\return 0 on success, -1 if the media list is read-only"]
     pub fn libvlc_media_list_add_media(
         p_ml: *mut libvlc_media_list_t,
         p_md: *mut libvlc_media_t,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Insert media instance in media list on a position"]
+    #[doc = " The libvlc_media_list_lock should be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\param p_md a media instance"]
+    #[doc = " \\param i_pos position in array where to insert"]
+    #[doc = " \\return 0 on success, -1 if the media list is read-only"]
     pub fn libvlc_media_list_insert_media(
         p_ml: *mut libvlc_media_list_t,
         p_md: *mut libvlc_media_t,
@@ -3047,36 +5083,80 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Remove media instance from media list on a position"]
+    #[doc = " The libvlc_media_list_lock should be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\param i_pos position in array where to insert"]
+    #[doc = " \\return 0 on success, -1 if the list is read-only or the item was not found"]
     pub fn libvlc_media_list_remove_index(
         p_ml: *mut libvlc_media_list_t,
         i_pos: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get count on media list items"]
+    #[doc = " The libvlc_media_list_lock should be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\return number of items in media list"]
     pub fn libvlc_media_list_count(p_ml: *mut libvlc_media_list_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " List media instance in media list at a position"]
+    #[doc = " The libvlc_media_list_lock should be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\param i_pos position in array where to insert"]
+    #[doc = " \\return media instance at position i_pos, or NULL if not found."]
+    #[doc = " In case of success, libvlc_media_retain() is called to increase the refcount"]
+    #[doc = " on the media."]
     pub fn libvlc_media_list_item_at_index(
         p_ml: *mut libvlc_media_list_t,
         i_pos: libc::c_int,
     ) -> *mut libvlc_media_t;
 }
 extern "C" {
+    #[doc = " Find index position of List media instance in media list."]
+    #[doc = " Warning: the function will return the first matched position."]
+    #[doc = " The libvlc_media_list_lock should be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\param p_md media instance"]
+    #[doc = " \\return position of media instance or -1 if media not found"]
     pub fn libvlc_media_list_index_of_item(
         p_ml: *mut libvlc_media_list_t,
         p_md: *mut libvlc_media_t,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " This indicates if this media list is read-only from a user point of view"]
+    #[doc = ""]
+    #[doc = " \\param p_ml media list instance"]
+    #[doc = " \\return 1 on readonly, 0 on readwrite"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_list_is_readonly(p_ml: *mut libvlc_media_list_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get lock on media list items"]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
     pub fn libvlc_media_list_lock(p_ml: *mut libvlc_media_list_t);
 }
 extern "C" {
+    #[doc = " Release lock on media list items"]
+    #[doc = " The libvlc_media_list_lock should be held upon entering this function."]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
     pub fn libvlc_media_list_unlock(p_ml: *mut libvlc_media_list_t);
 }
 extern "C" {
+    #[doc = " Get libvlc_event_manager from this media list instance."]
+    #[doc = " The p_event_manager is immutable, so you don't have to hold the lock"]
+    #[doc = ""]
+    #[doc = " \\param p_ml a media list instance"]
+    #[doc = " \\return libvlc_event_manager"]
     pub fn libvlc_media_list_event_manager(
         p_ml: *mut libvlc_media_list_t,
     ) -> *mut libvlc_event_manager_t;
@@ -3089,85 +5169,164 @@ pub struct libvlc_media_list_player_t {
 pub const libvlc_playback_mode_t_libvlc_playback_mode_default: libvlc_playback_mode_t = 0;
 pub const libvlc_playback_mode_t_libvlc_playback_mode_loop: libvlc_playback_mode_t = 1;
 pub const libvlc_playback_mode_t_libvlc_playback_mode_repeat: libvlc_playback_mode_t = 2;
+#[doc = "  Defines playback modes for playlist."]
 pub type libvlc_playback_mode_t = libc::c_uint;
 extern "C" {
+    #[doc = " Create new media_list_player."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\return media list player instance or NULL on error"]
     pub fn libvlc_media_list_player_new(
         p_instance: *mut libvlc_instance_t,
     ) -> *mut libvlc_media_list_player_t;
 }
 extern "C" {
+    #[doc = " Release a media_list_player after use"]
+    #[doc = " Decrement the reference count of a media player object. If the"]
+    #[doc = " reference count is 0, then libvlc_media_list_player_release() will"]
+    #[doc = " release the media player object. If the media player object"]
+    #[doc = " has been released, then it should not be used again."]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
     pub fn libvlc_media_list_player_release(p_mlp: *mut libvlc_media_list_player_t);
 }
 extern "C" {
+    #[doc = " Retain a reference to a media player list object. Use"]
+    #[doc = " libvlc_media_list_player_release() to decrement reference count."]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media player list object"]
     pub fn libvlc_media_list_player_retain(p_mlp: *mut libvlc_media_list_player_t);
 }
 extern "C" {
+    #[doc = " Return the event manager of this media_list_player."]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\return the event manager"]
     pub fn libvlc_media_list_player_event_manager(
         p_mlp: *mut libvlc_media_list_player_t,
     ) -> *mut libvlc_event_manager_t;
 }
 extern "C" {
+    #[doc = " Replace media player in media_list_player with this instance."]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\param p_mi media player instance"]
     pub fn libvlc_media_list_player_set_media_player(
         p_mlp: *mut libvlc_media_list_player_t,
         p_mi: *mut libvlc_media_player_t,
     );
 }
 extern "C" {
+    #[doc = " Get media player of the media_list_player instance."]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\return media player instance"]
+    #[doc = " \\note the caller is responsible for releasing the returned instance"]
     pub fn libvlc_media_list_player_get_media_player(
         p_mlp: *mut libvlc_media_list_player_t,
     ) -> *mut libvlc_media_player_t;
 }
 extern "C" {
+    #[doc = " Set the media list associated with the player"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\param p_mlist list of media"]
     pub fn libvlc_media_list_player_set_media_list(
         p_mlp: *mut libvlc_media_list_player_t,
         p_mlist: *mut libvlc_media_list_t,
     );
 }
 extern "C" {
+    #[doc = " Play media list"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
     pub fn libvlc_media_list_player_play(p_mlp: *mut libvlc_media_list_player_t);
 }
 extern "C" {
+    #[doc = " Toggle pause (or resume) media list"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
     pub fn libvlc_media_list_player_pause(p_mlp: *mut libvlc_media_list_player_t);
 }
 extern "C" {
+    #[doc = " Pause or resume media list"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\param do_pause play/resume if zero, pause if non-zero"]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_list_player_set_pause(
         p_mlp: *mut libvlc_media_list_player_t,
         do_pause: libc::c_int,
     );
 }
 extern "C" {
+    #[doc = " Is media list playing?"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\return true for playing and false for not playing"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_list_player_is_playing(
         p_mlp: *mut libvlc_media_list_player_t,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get current libvlc_state of media list player"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\return libvlc_state_t for media list player"]
     pub fn libvlc_media_list_player_get_state(
         p_mlp: *mut libvlc_media_list_player_t,
     ) -> libvlc_state_t;
 }
 extern "C" {
+    #[doc = " Play media list item at position index"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\param i_index index in media list to play"]
+    #[doc = " \\return 0 upon success -1 if the item wasn't found"]
     pub fn libvlc_media_list_player_play_item_at_index(
         p_mlp: *mut libvlc_media_list_player_t,
         i_index: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Play the given media item"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\param p_md the media instance"]
+    #[doc = " \\return 0 upon success, -1 if the media is not part of the media list"]
     pub fn libvlc_media_list_player_play_item(
         p_mlp: *mut libvlc_media_list_player_t,
         p_md: *mut libvlc_media_t,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Stop playing media list"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
     pub fn libvlc_media_list_player_stop(p_mlp: *mut libvlc_media_list_player_t);
 }
 extern "C" {
+    #[doc = " Play next item from media list"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\return 0 upon success -1 if there is no next item"]
     pub fn libvlc_media_list_player_next(p_mlp: *mut libvlc_media_list_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Play previous item from media list"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\return 0 upon success -1 if there is no previous item"]
     pub fn libvlc_media_list_player_previous(p_mlp: *mut libvlc_media_list_player_t)
         -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Sets the playback mode for the playlist"]
+    #[doc = ""]
+    #[doc = " \\param p_mlp media list player instance"]
+    #[doc = " \\param e_mode playback mode specification"]
     pub fn libvlc_media_list_player_set_playback_mode(
         p_mlp: *mut libvlc_media_list_player_t,
         e_mode: libvlc_playback_mode_t,
@@ -3179,33 +5338,63 @@ pub struct libvlc_media_library_t {
     _unused: [u8; 0],
 }
 extern "C" {
+    #[doc = " Create an new Media Library object"]
+    #[doc = ""]
+    #[doc = " \\param p_instance the libvlc instance"]
+    #[doc = " \\return a new object or NULL on error"]
     pub fn libvlc_media_library_new(
         p_instance: *mut libvlc_instance_t,
     ) -> *mut libvlc_media_library_t;
 }
 extern "C" {
+    #[doc = " Release media library object. This functions decrements the"]
+    #[doc = " reference count of the media library object. If it reaches 0,"]
+    #[doc = " then the object will be released."]
+    #[doc = ""]
+    #[doc = " \\param p_mlib media library object"]
     pub fn libvlc_media_library_release(p_mlib: *mut libvlc_media_library_t);
 }
 extern "C" {
+    #[doc = " Retain a reference to a media library object. This function will"]
+    #[doc = " increment the reference counting for this object. Use"]
+    #[doc = " libvlc_media_library_release() to decrement the reference count."]
+    #[doc = ""]
+    #[doc = " \\param p_mlib media library object"]
     pub fn libvlc_media_library_retain(p_mlib: *mut libvlc_media_library_t);
 }
 extern "C" {
+    #[doc = " Load media library."]
+    #[doc = ""]
+    #[doc = " \\param p_mlib media library object"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_media_library_load(p_mlib: *mut libvlc_media_library_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get media library subitems."]
+    #[doc = ""]
+    #[doc = " \\param p_mlib media library object"]
+    #[doc = " \\return media list subitems"]
     pub fn libvlc_media_library_media_list(
         p_mlib: *mut libvlc_media_library_t,
     ) -> *mut libvlc_media_list_t;
 }
+#[doc = " devices, like portable music player"]
 pub const libvlc_media_discoverer_category_t_libvlc_media_discoverer_devices:
     libvlc_media_discoverer_category_t = 0;
+#[doc = " LAN/WAN services, like Upnp, SMB, or SAP"]
 pub const libvlc_media_discoverer_category_t_libvlc_media_discoverer_lan:
     libvlc_media_discoverer_category_t = 1;
+#[doc = " Podcasts"]
 pub const libvlc_media_discoverer_category_t_libvlc_media_discoverer_podcasts:
     libvlc_media_discoverer_category_t = 2;
+#[doc = " Local directories, like Video, Music or Pictures directories"]
 pub const libvlc_media_discoverer_category_t_libvlc_media_discoverer_localdirs:
     libvlc_media_discoverer_category_t = 3;
+#[doc = " Category of a media discoverer"]
+#[doc = " \\see libvlc_media_discoverer_list_get()"]
 pub type libvlc_media_discoverer_category_t = libc::c_uint;
+#[doc = " Media discoverer description"]
+#[doc = " \\see libvlc_media_discoverer_list_get()"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_media_discoverer_description_t {
@@ -3277,31 +5466,89 @@ pub struct libvlc_media_discoverer_t {
     _unused: [u8; 0],
 }
 extern "C" {
+    #[doc = " Create a media discoverer object by name."]
+    #[doc = ""]
+    #[doc = " After this object is created, you should attach to media_list events in"]
+    #[doc = " order to be notified of new items discovered."]
+    #[doc = ""]
+    #[doc = " You need to call libvlc_media_discoverer_start() in order to start the"]
+    #[doc = " discovery."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_discoverer_media_list"]
+    #[doc = " \\see libvlc_media_discoverer_event_manager"]
+    #[doc = " \\see libvlc_media_discoverer_start"]
+    #[doc = ""]
+    #[doc = " \\param p_inst libvlc instance"]
+    #[doc = " \\param psz_name service name; use libvlc_media_discoverer_list_get() to get"]
+    #[doc = " a list of the discoverer names available in this libVLC instance"]
+    #[doc = " \\return media discover object or NULL in case of error"]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_discoverer_new(
         p_inst: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> *mut libvlc_media_discoverer_t;
 }
 extern "C" {
+    #[doc = " Start media discovery."]
+    #[doc = ""]
+    #[doc = " To stop it, call libvlc_media_discoverer_stop() or"]
+    #[doc = " libvlc_media_discoverer_list_release() directly."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_discoverer_stop"]
+    #[doc = ""]
+    #[doc = " \\param p_mdis media discover object"]
+    #[doc = " \\return -1 in case of error, 0 otherwise"]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_discoverer_start(p_mdis: *mut libvlc_media_discoverer_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Stop media discovery."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_discoverer_start"]
+    #[doc = ""]
+    #[doc = " \\param p_mdis media discover object"]
+    #[doc = " \\version LibVLC 3.0.0 or later"]
     pub fn libvlc_media_discoverer_stop(p_mdis: *mut libvlc_media_discoverer_t);
 }
 extern "C" {
+    #[doc = " Release media discover object. If the reference count reaches 0, then"]
+    #[doc = " the object will be released."]
+    #[doc = ""]
+    #[doc = " \\param p_mdis media service discover object"]
     pub fn libvlc_media_discoverer_release(p_mdis: *mut libvlc_media_discoverer_t);
 }
 extern "C" {
+    #[doc = " Get media service discover media list."]
+    #[doc = ""]
+    #[doc = " \\param p_mdis media service discover object"]
+    #[doc = " \\return list of media items"]
     pub fn libvlc_media_discoverer_media_list(
         p_mdis: *mut libvlc_media_discoverer_t,
     ) -> *mut libvlc_media_list_t;
 }
 extern "C" {
+    #[doc = " Query if media service discover object is running."]
+    #[doc = ""]
+    #[doc = " \\param p_mdis media service discover object"]
+    #[doc = " \\return true if running, false if not"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_discoverer_is_running(
         p_mdis: *mut libvlc_media_discoverer_t,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get media discoverer services by category"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\param p_inst libvlc instance"]
+    #[doc = " \\param i_cat category of services to fetch"]
+    #[doc = " \\param ppp_services address to store an allocated array of media discoverer"]
+    #[doc = " services (must be freed with libvlc_media_discoverer_list_release() by"]
+    #[doc = " the caller) [OUT]"]
+    #[doc = ""]
+    #[doc = " \\return the number of media discoverer services (0 on error)"]
     pub fn libvlc_media_discoverer_list_get(
         p_inst: *mut libvlc_instance_t,
         i_cat: libvlc_media_discoverer_category_t,
@@ -3309,6 +5556,14 @@ extern "C" {
     ) -> size_t;
 }
 extern "C" {
+    #[doc = " Release an array of media discoverer services"]
+    #[doc = ""]
+    #[doc = " \\version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_discoverer_list_get()"]
+    #[doc = ""]
+    #[doc = " \\param pp_services array to release"]
+    #[doc = " \\param i_count number of elements in the array"]
     pub fn libvlc_media_discoverer_list_release(
         pp_services: *mut *mut libvlc_media_discoverer_description_t,
         i_count: size_t,
@@ -3351,6 +5606,7 @@ pub const libvlc_event_e_libvlc_MediaPlayerUnmuted: libvlc_event_e = 282;
 pub const libvlc_event_e_libvlc_MediaPlayerAudioVolume: libvlc_event_e = 283;
 pub const libvlc_event_e_libvlc_MediaPlayerAudioDevice: libvlc_event_e = 284;
 pub const libvlc_event_e_libvlc_MediaPlayerChapterChanged: libvlc_event_e = 285;
+pub const libvlc_event_e_libvlc_MediaPlayerTeletextActivePageChanged: libvlc_event_e = 286;
 pub const libvlc_event_e_libvlc_MediaListItemAdded: libvlc_event_e = 512;
 pub const libvlc_event_e_libvlc_MediaListWillAddItem: libvlc_event_e = 513;
 pub const libvlc_event_e_libvlc_MediaListItemDeleted: libvlc_event_e = 514;
@@ -3363,27 +5619,62 @@ pub const libvlc_event_e_libvlc_MediaListViewWillDeleteItem: libvlc_event_e = 77
 pub const libvlc_event_e_libvlc_MediaListPlayerPlayed: libvlc_event_e = 1024;
 pub const libvlc_event_e_libvlc_MediaListPlayerNextItemSet: libvlc_event_e = 1025;
 pub const libvlc_event_e_libvlc_MediaListPlayerStopped: libvlc_event_e = 1026;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_start()"]
 pub const libvlc_event_e_libvlc_MediaDiscovererStarted: libvlc_event_e = 1280;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_MediaDiscovererEnded: libvlc_event_e = 1281;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_RendererDiscovererItemAdded: libvlc_event_e = 1282;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_RendererDiscovererItemDeleted: libvlc_event_e = 1283;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaAdded: libvlc_event_e = 1536;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaRemoved: libvlc_event_e = 1537;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaChanged: libvlc_event_e = 1538;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStarted: libvlc_event_e = 1539;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStopped: libvlc_event_e = 1540;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStatusInit: libvlc_event_e = 1541;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStatusOpening: libvlc_event_e = 1542;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStatusPlaying: libvlc_event_e = 1543;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStatusPause: libvlc_event_e = 1544;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStatusEnd: libvlc_event_e = 1545;
+#[doc = " \\deprecated Useless event, it will be triggered only when calling"]
+#[doc = " libvlc_media_discoverer_stop()"]
 pub const libvlc_event_e_libvlc_VlmMediaInstanceStatusError: libvlc_event_e = 1546;
+#[doc = " Event types"]
 pub type libvlc_event_e = libc::c_uint;
+#[doc = " A LibVLC event"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct libvlc_event_t {
+    #[doc = "< Event type (see @ref libvlc_event_e)"]
     pub type_: libc::c_int,
+    #[doc = "< Object emitting the event"]
     pub p_obj: *mut libc::c_void,
+    #[doc = "< Type-dependent event description"]
     pub u: libvlc_event_t__bindgen_ty_1,
 }
 #[repr(C)]
@@ -3419,6 +5710,7 @@ pub union libvlc_event_t__bindgen_ty_1 {
     pub media_player_audio_device: libvlc_event_t__bindgen_ty_1__bindgen_ty_28,
     pub renderer_discoverer_item_added: libvlc_event_t__bindgen_ty_1__bindgen_ty_29,
     pub renderer_discoverer_item_deleted: libvlc_event_t__bindgen_ty_1__bindgen_ty_30,
+    pub media_player_teletext_active_page_changed: libvlc_event_t__bindgen_ty_1__bindgen_ty_31,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -3534,6 +5826,7 @@ fn bindgen_test_layout_libvlc_event_t__bindgen_ty_1__bindgen_ty_3() {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_event_t__bindgen_ty_1__bindgen_ty_4 {
+    #[doc = "< see @ref libvlc_media_parsed_status_t"]
     pub new_status: libc::c_int,
 }
 #[test]
@@ -3608,6 +5901,7 @@ fn bindgen_test_layout_libvlc_event_t__bindgen_ty_1__bindgen_ty_5() {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_event_t__bindgen_ty_1__bindgen_ty_6 {
+    #[doc = "< see @ref libvlc_state_t"]
     pub new_state: libc::c_int,
 }
 #[test]
@@ -4614,6 +6908,43 @@ fn bindgen_test_layout_libvlc_event_t__bindgen_ty_1__bindgen_ty_30() {
         )
     );
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct libvlc_event_t__bindgen_ty_1__bindgen_ty_31 {
+    pub page: libc::c_int,
+}
+#[test]
+fn bindgen_test_layout_libvlc_event_t__bindgen_ty_1__bindgen_ty_31() {
+    assert_eq!(
+        ::core::mem::size_of::<libvlc_event_t__bindgen_ty_1__bindgen_ty_31>(),
+        4usize,
+        concat!(
+            "Size of: ",
+            stringify!(libvlc_event_t__bindgen_ty_1__bindgen_ty_31)
+        )
+    );
+    assert_eq!(
+        ::core::mem::align_of::<libvlc_event_t__bindgen_ty_1__bindgen_ty_31>(),
+        4usize,
+        concat!(
+            "Alignment of ",
+            stringify!(libvlc_event_t__bindgen_ty_1__bindgen_ty_31)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::core::ptr::null::<libvlc_event_t__bindgen_ty_1__bindgen_ty_31>())).page
+                as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(libvlc_event_t__bindgen_ty_1__bindgen_ty_31),
+            "::",
+            stringify!(page)
+        )
+    );
+}
 #[test]
 fn bindgen_test_layout_libvlc_event_t__bindgen_ty_1() {
     assert_eq!(
@@ -5016,6 +7347,19 @@ fn bindgen_test_layout_libvlc_event_t__bindgen_ty_1() {
             stringify!(renderer_discoverer_item_deleted)
         )
     );
+    assert_eq!(
+        unsafe {
+            &(*(::core::ptr::null::<libvlc_event_t__bindgen_ty_1>()))
+                .media_player_teletext_active_page_changed as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(libvlc_event_t__bindgen_ty_1),
+            "::",
+            stringify!(media_player_teletext_active_page_changed)
+        )
+    );
 }
 #[test]
 fn bindgen_test_layout_libvlc_event_t() {
@@ -5071,10 +7415,21 @@ pub const libvlc_dialog_question_type_LIBVLC_DIALOG_QUESTION_WARNING: libvlc_dia
     1;
 pub const libvlc_dialog_question_type_LIBVLC_DIALOG_QUESTION_CRITICAL: libvlc_dialog_question_type =
     2;
+#[doc = " @defgroup libvlc_dialog LibVLC dialog"]
+#[doc = " @ingroup libvlc"]
+#[doc = " @{"]
+#[doc = " @file"]
+#[doc = " LibVLC dialog external API"]
 pub type libvlc_dialog_question_type = libc::c_uint;
+#[doc = " Dialog callbacks to be implemented"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct libvlc_dialog_cbs {
+    #[doc = " Called when an error message needs to be displayed"]
+    #[doc = ""]
+    #[doc = " @param p_data opaque pointer for the callback"]
+    #[doc = " @param psz_title title of the dialog"]
+    #[doc = " @param psz_text text of the dialog"]
     pub pf_display_error: ::core::option::Option<
         unsafe extern "C" fn(
             p_data: *mut libc::c_void,
@@ -5082,6 +7437,21 @@ pub struct libvlc_dialog_cbs {
             psz_text: *const libc::c_char,
         ),
     >,
+    #[doc = " Called when a login dialog needs to be displayed"]
+    #[doc = ""]
+    #[doc = " You can interact with this dialog by calling libvlc_dialog_post_login()"]
+    #[doc = " to post an answer or libvlc_dialog_dismiss() to cancel this dialog."]
+    #[doc = ""]
+    #[doc = " @note to receive this callback, libvlc_dialog_cbs.pf_cancel should not be"]
+    #[doc = " NULL."]
+    #[doc = ""]
+    #[doc = " @param p_data opaque pointer for the callback"]
+    #[doc = " @param p_id id used to interact with the dialog"]
+    #[doc = " @param psz_title title of the dialog"]
+    #[doc = " @param psz_text text of the dialog"]
+    #[doc = " @param psz_default_username user name that should be set on the user form"]
+    #[doc = " @param b_ask_store if true, ask the user if he wants to save the"]
+    #[doc = " credentials"]
     pub pf_display_login: ::core::option::Option<
         unsafe extern "C" fn(
             p_data: *mut libc::c_void,
@@ -5092,6 +7462,24 @@ pub struct libvlc_dialog_cbs {
             b_ask_store: bool,
         ),
     >,
+    #[doc = " Called when a question dialog needs to be displayed"]
+    #[doc = ""]
+    #[doc = " You can interact with this dialog by calling libvlc_dialog_post_action()"]
+    #[doc = " to post an answer or libvlc_dialog_dismiss() to cancel this dialog."]
+    #[doc = ""]
+    #[doc = " @note to receive this callback, libvlc_dialog_cbs.pf_cancel should not be"]
+    #[doc = " NULL."]
+    #[doc = ""]
+    #[doc = " @param p_data opaque pointer for the callback"]
+    #[doc = " @param p_id id used to interact with the dialog"]
+    #[doc = " @param psz_title title of the dialog"]
+    #[doc = " @param psz_text text of the dialog"]
+    #[doc = " @param i_type question type (or severity) of the dialog"]
+    #[doc = " @param psz_cancel text of the cancel button"]
+    #[doc = " @param psz_action1 text of the first button, if NULL, don't display this"]
+    #[doc = " button"]
+    #[doc = " @param psz_action2 text of the second button, if NULL, don't display"]
+    #[doc = " this button"]
     pub pf_display_question: ::core::option::Option<
         unsafe extern "C" fn(
             p_data: *mut libc::c_void,
@@ -5104,6 +7492,23 @@ pub struct libvlc_dialog_cbs {
             psz_action2: *const libc::c_char,
         ),
     >,
+    #[doc = " Called when a progress dialog needs to be displayed"]
+    #[doc = ""]
+    #[doc = " If cancellable (psz_cancel != NULL), you can cancel this dialog by"]
+    #[doc = " calling libvlc_dialog_dismiss()"]
+    #[doc = ""]
+    #[doc = " @note to receive this callback, libvlc_dialog_cbs.pf_cancel and"]
+    #[doc = " libvlc_dialog_cbs.pf_update_progress should not be NULL."]
+    #[doc = ""]
+    #[doc = " @param p_data opaque pointer for the callback"]
+    #[doc = " @param p_id id used to interact with the dialog"]
+    #[doc = " @param psz_title title of the dialog"]
+    #[doc = " @param psz_text text of the dialog"]
+    #[doc = " @param b_indeterminate true if the progress dialog is indeterminate"]
+    #[doc = " @param f_position initial position of the progress bar (between 0.0 and"]
+    #[doc = " 1.0)"]
+    #[doc = " @param psz_cancel text of the cancel button, if NULL the dialog is not"]
+    #[doc = " cancellable"]
     pub pf_display_progress: ::core::option::Option<
         unsafe extern "C" fn(
             p_data: *mut libc::c_void,
@@ -5115,9 +7520,22 @@ pub struct libvlc_dialog_cbs {
             psz_cancel: *const libc::c_char,
         ),
     >,
+    #[doc = " Called when a displayed dialog needs to be cancelled"]
+    #[doc = ""]
+    #[doc = " The implementation must call libvlc_dialog_dismiss() to really release"]
+    #[doc = " the dialog."]
+    #[doc = ""]
+    #[doc = " @param p_data opaque pointer for the callback"]
+    #[doc = " @param p_id id of the dialog"]
     pub pf_cancel: ::core::option::Option<
         unsafe extern "C" fn(p_data: *mut libc::c_void, p_id: *mut libvlc_dialog_id),
     >,
+    #[doc = " Called when a progress dialog needs to be updated"]
+    #[doc = ""]
+    #[doc = " @param p_data opaque pointer for the callback"]
+    #[doc = " @param p_id id of the dialog"]
+    #[doc = " @param f_position osition of the progress bar (between 0.0 and 1.0)"]
+    #[doc = " @param psz_text new text of the progress dialog"]
     pub pf_update_progress: ::core::option::Option<
         unsafe extern "C" fn(
             p_data: *mut libc::c_void,
@@ -5211,6 +7629,12 @@ fn bindgen_test_layout_libvlc_dialog_cbs() {
     );
 }
 extern "C" {
+    #[doc = " Register callbacks in order to handle VLC dialogs"]
+    #[doc = ""]
+    #[doc = " @version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " @param p_cbs a pointer to callbacks, or NULL to unregister callbacks."]
+    #[doc = " @param p_data opaque pointer for the callback"]
     pub fn libvlc_dialog_set_callbacks(
         p_instance: *mut libvlc_instance_t,
         p_cbs: *const libvlc_dialog_cbs,
@@ -5218,12 +7642,31 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Associate an opaque pointer with the dialog id"]
+    #[doc = ""]
+    #[doc = " @version LibVLC 3.0.0 and later."]
     pub fn libvlc_dialog_set_context(p_id: *mut libvlc_dialog_id, p_context: *mut libc::c_void);
 }
 extern "C" {
+    #[doc = " Return the opaque pointer associated with the dialog id"]
+    #[doc = ""]
+    #[doc = " @version LibVLC 3.0.0 and later."]
     pub fn libvlc_dialog_get_context(p_id: *mut libvlc_dialog_id) -> *mut libc::c_void;
 }
 extern "C" {
+    #[doc = " Post a login answer"]
+    #[doc = ""]
+    #[doc = " After this call, p_id won't be valid anymore"]
+    #[doc = ""]
+    #[doc = " @see libvlc_dialog_cbs.pf_display_login"]
+    #[doc = ""]
+    #[doc = " @version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " @param p_id id of the dialog"]
+    #[doc = " @param psz_username valid and non empty string"]
+    #[doc = " @param psz_password valid string (can be empty)"]
+    #[doc = " @param b_store if true, store the credentials"]
+    #[doc = " @return 0 on success, or -1 on error"]
     pub fn libvlc_dialog_post_login(
         p_id: *mut libvlc_dialog_id,
         psz_username: *const libc::c_char,
@@ -5232,18 +7675,53 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Post a question answer"]
+    #[doc = ""]
+    #[doc = " After this call, p_id won't be valid anymore"]
+    #[doc = ""]
+    #[doc = " @see libvlc_dialog_cbs.pf_display_question"]
+    #[doc = ""]
+    #[doc = " @version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " @param p_id id of the dialog"]
+    #[doc = " @param i_action 1 for action1, 2 for action2"]
+    #[doc = " @return 0 on success, or -1 on error"]
     pub fn libvlc_dialog_post_action(
         p_id: *mut libvlc_dialog_id,
         i_action: libc::c_int,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Dismiss a dialog"]
+    #[doc = ""]
+    #[doc = " After this call, p_id won't be valid anymore"]
+    #[doc = ""]
+    #[doc = " @see libvlc_dialog_cbs.pf_cancel"]
+    #[doc = ""]
+    #[doc = " @version LibVLC 3.0.0 and later."]
+    #[doc = ""]
+    #[doc = " @param p_id id of the dialog"]
+    #[doc = " @return 0 on success, or -1 on error"]
     pub fn libvlc_dialog_dismiss(p_id: *mut libvlc_dialog_id) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Release the vlm instance related to the given libvlc_instance_t"]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
     pub fn libvlc_vlm_release(p_instance: *mut libvlc_instance_t);
 }
 extern "C" {
+    #[doc = " Add a broadcast, with one input."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the new broadcast"]
+    #[doc = " \\param psz_input the input MRL"]
+    #[doc = " \\param psz_output the output MRL (the parameter to the \"sout\" variable)"]
+    #[doc = " \\param i_options number of additional options"]
+    #[doc = " \\param ppsz_options additional options"]
+    #[doc = " \\param b_enabled boolean for enabling the new broadcast"]
+    #[doc = " \\param b_loop Should this broadcast be played in loop ?"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_add_broadcast(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5256,6 +7734,16 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Add a vod, with one input."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the new vod media"]
+    #[doc = " \\param psz_input the input MRL"]
+    #[doc = " \\param i_options number of additional options"]
+    #[doc = " \\param ppsz_options additional options"]
+    #[doc = " \\param b_enabled boolean for enabling the new vod"]
+    #[doc = " \\param psz_mux the muxer of the vod media"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_add_vod(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5267,12 +7755,23 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Delete a media (VOD or broadcast)."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the media to delete"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_del_media(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Enable or disable a media (VOD or broadcast)."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the media to work on"]
+    #[doc = " \\param b_enabled the new status"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_set_enabled(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5280,6 +7779,12 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set the output for a media."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the media to work on"]
+    #[doc = " \\param psz_output the output MRL (the parameter to the \"sout\" variable)"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_set_output(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5287,6 +7792,13 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set a media's input MRL. This will delete all existing inputs and"]
+    #[doc = " add the specified one."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the media to work on"]
+    #[doc = " \\param psz_input the input MRL"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_set_input(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5294,6 +7806,12 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Add a media's input MRL. This will add the specified one."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the media to work on"]
+    #[doc = " \\param psz_input the input MRL"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_add_input(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5301,6 +7819,12 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set a media's loop status."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the media to work on"]
+    #[doc = " \\param b_loop the new status"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_set_loop(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5308,6 +7832,12 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set a media's vod muxer."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the media to work on"]
+    #[doc = " \\param psz_mux the new muxer"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_set_mux(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5315,6 +7845,18 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Edit the parameters of a media. This will delete all existing inputs and"]
+    #[doc = " add the specified one."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the new broadcast"]
+    #[doc = " \\param psz_input the input MRL"]
+    #[doc = " \\param psz_output the output MRL (the parameter to the \"sout\" variable)"]
+    #[doc = " \\param i_options number of additional options"]
+    #[doc = " \\param ppsz_options additional options"]
+    #[doc = " \\param b_enabled boolean for enabling the new broadcast"]
+    #[doc = " \\param b_loop Should this broadcast be played in loop ?"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_change_media(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5327,24 +7869,45 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Play the named broadcast."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the broadcast"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_play_media(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Stop the named broadcast."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the broadcast"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_stop_media(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Pause the named broadcast."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the broadcast"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_pause_media(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Seek in the named broadcast."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the broadcast"]
+    #[doc = " \\param f_percentage the percentage to seek to"]
+    #[doc = " \\return 0 on success, -1 on error"]
     pub fn libvlc_vlm_seek_media(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5352,12 +7915,32 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Return information about the named media as a JSON"]
+    #[doc = " string representation."]
+    #[doc = ""]
+    #[doc = " This function is mainly intended for debugging use,"]
+    #[doc = " if you want programmatic access to the state of"]
+    #[doc = " a vlm_media_instance_t, please use the corresponding"]
+    #[doc = " libvlc_vlm_get_media_instance_xxx -functions."]
+    #[doc = " Currently there are no such functions available for"]
+    #[doc = " vlm_media_t though."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\param psz_name the name of the media,"]
+    #[doc = "      if the name is an empty string, all media is described"]
+    #[doc = " \\return string with information about named media, or NULL on error"]
     pub fn libvlc_vlm_show_media(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> *const libc::c_char;
 }
 extern "C" {
+    #[doc = " Get vlm_media instance position by name or instance id"]
+    #[doc = ""]
+    #[doc = " \\param p_instance a libvlc instance"]
+    #[doc = " \\param psz_name name of vlm media instance"]
+    #[doc = " \\param i_instance instance id"]
+    #[doc = " \\return position as float or -1. on error"]
     pub fn libvlc_vlm_get_media_instance_position(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5365,6 +7948,12 @@ extern "C" {
     ) -> f32;
 }
 extern "C" {
+    #[doc = " Get vlm_media instance time by name or instance id"]
+    #[doc = ""]
+    #[doc = " \\param p_instance a libvlc instance"]
+    #[doc = " \\param psz_name name of vlm media instance"]
+    #[doc = " \\param i_instance instance id"]
+    #[doc = " \\return time as integer or -1 on error"]
     pub fn libvlc_vlm_get_media_instance_time(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5372,6 +7961,12 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get vlm_media instance length by name or instance id"]
+    #[doc = ""]
+    #[doc = " \\param p_instance a libvlc instance"]
+    #[doc = " \\param psz_name name of vlm media instance"]
+    #[doc = " \\param i_instance instance id"]
+    #[doc = " \\return length of media item or -1 on error"]
     pub fn libvlc_vlm_get_media_instance_length(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5379,6 +7974,12 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get vlm_media instance playback rate by name or instance id"]
+    #[doc = ""]
+    #[doc = " \\param p_instance a libvlc instance"]
+    #[doc = " \\param psz_name name of vlm media instance"]
+    #[doc = " \\param i_instance instance id"]
+    #[doc = " \\return playback rate or -1 on error"]
     pub fn libvlc_vlm_get_media_instance_rate(
         p_instance: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
@@ -5386,55 +7987,110 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get libvlc_event_manager from a vlm media."]
+    #[doc = " The p_event_manager is immutable, so you don't have to hold the lock"]
+    #[doc = ""]
+    #[doc = " \\param p_instance a libvlc instance"]
+    #[doc = " \\return libvlc_event_manager"]
     pub fn libvlc_vlm_get_event_manager(
         p_instance: *mut libvlc_instance_t,
     ) -> *mut libvlc_event_manager_t;
 }
 extern "C" {
+    #[doc = " Get movie fps rate"]
+    #[doc = ""]
+    #[doc = " This function is provided for backward compatibility. It cannot deal with"]
+    #[doc = " multiple video tracks. In LibVLC versions prior to 3.0, it would also fail"]
+    #[doc = " if the file format did not convey the frame rate explicitly."]
+    #[doc = ""]
+    #[doc = " \\deprecated Consider using libvlc_media_tracks_get() instead."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the Media Player"]
+    #[doc = " \\return frames per second (fps) for this playing movie, or 0 if unspecified"]
     pub fn libvlc_media_player_get_fps(p_mi: *mut libvlc_media_player_t) -> f32;
 }
 extern "C" {
+    #[doc = " \\deprecated Use libvlc_media_player_set_nsobject() instead"]
     pub fn libvlc_media_player_set_agl(p_mi: *mut libvlc_media_player_t, drawable: u32);
 }
 extern "C" {
+    #[doc = " \\deprecated Use libvlc_media_player_get_nsobject() instead"]
     pub fn libvlc_media_player_get_agl(p_mi: *mut libvlc_media_player_t) -> u32;
 }
 extern "C" {
+    #[doc = " \\deprecated Use libvlc_track_description_list_release() instead"]
     pub fn libvlc_track_description_release(p_track_description: *mut libvlc_track_description_t);
 }
 extern "C" {
+    #[doc = " Get current video height."]
+    #[doc = " \\deprecated Use libvlc_video_get_size() instead."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the video pixel height or 0 if not applicable"]
     pub fn libvlc_video_get_height(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get current video width."]
+    #[doc = " \\deprecated Use libvlc_video_get_size() instead."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return the video pixel width or 0 if not applicable"]
     pub fn libvlc_video_get_width(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get the description of available titles."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\return list containing description of available titles."]
+    #[doc = " It must be freed with libvlc_track_description_list_release()"]
     pub fn libvlc_video_get_title_description(
         p_mi: *mut libvlc_media_player_t,
     ) -> *mut libvlc_track_description_t;
 }
 extern "C" {
+    #[doc = " Get the description of available chapters for specific title."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param i_title selected title"]
+    #[doc = " \\return list containing description of available chapter for title i_title."]
+    #[doc = " It must be freed with libvlc_track_description_list_release()"]
     pub fn libvlc_video_get_chapter_description(
         p_mi: *mut libvlc_media_player_t,
         i_title: libc::c_int,
     ) -> *mut libvlc_track_description_t;
 }
 extern "C" {
+    #[doc = " Set new video subtitle file."]
+    #[doc = " \\deprecated Use libvlc_media_player_add_slave() instead."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param psz_subtitle new video subtitle file"]
+    #[doc = " \\return the success status (boolean)"]
     pub fn libvlc_video_set_subtitle_file(
         p_mi: *mut libvlc_media_player_t,
         psz_subtitle: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Toggle teletext transparent status on video output."]
+    #[doc = " \\deprecated use libvlc_video_set_teletext() instead."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
     pub fn libvlc_toggle_teletext(p_mi: *mut libvlc_media_player_t);
 }
 extern "C" {
+    #[doc = " Backward compatibility stub. Do not use in new code."]
+    #[doc = " \\deprecated Use libvlc_audio_output_device_list_get() instead."]
+    #[doc = " \\return always 0."]
     pub fn libvlc_audio_output_device_count(
         p_instance: *mut libvlc_instance_t,
         psz_audio_output: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Backward compatibility stub. Do not use in new code."]
+    #[doc = " \\deprecated Use libvlc_audio_output_device_list_get() instead."]
+    #[doc = " \\return always NULL."]
     pub fn libvlc_audio_output_device_longname(
         p_instance: *mut libvlc_instance_t,
         psz_output: *const libc::c_char,
@@ -5442,6 +8098,9 @@ extern "C" {
     ) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Backward compatibility stub. Do not use in new code."]
+    #[doc = " \\deprecated Use libvlc_audio_output_device_list_get() instead."]
+    #[doc = " \\return always NULL."]
     pub fn libvlc_audio_output_device_id(
         p_instance: *mut libvlc_instance_t,
         psz_audio_output: *const libc::c_char,
@@ -5449,52 +8108,134 @@ extern "C" {
     ) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Stub for backward compatibility."]
+    #[doc = " \\return always -1."]
     pub fn libvlc_audio_output_get_device_type(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Stub for backward compatibility."]
     pub fn libvlc_audio_output_set_device_type(
         p_mp: *mut libvlc_media_player_t,
         device_type: libc::c_int,
     );
 }
 extern "C" {
+    #[doc = " Parse a media."]
+    #[doc = ""]
+    #[doc = " This fetches (local) art, meta data and tracks information."]
+    #[doc = " The method is synchronous."]
+    #[doc = ""]
+    #[doc = " \\deprecated This function could block indefinitely."]
+    #[doc = "             Use libvlc_media_parse_with_options() instead"]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_parse_with_options"]
+    #[doc = " \\see libvlc_media_get_meta"]
+    #[doc = " \\see libvlc_media_get_tracks_info"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
     pub fn libvlc_media_parse(p_md: *mut libvlc_media_t);
 }
 extern "C" {
+    #[doc = " Parse a media."]
+    #[doc = ""]
+    #[doc = " This fetches (local) art, meta data and tracks information."]
+    #[doc = " The method is the asynchronous of libvlc_media_parse()."]
+    #[doc = ""]
+    #[doc = " To track when this is over you can listen to libvlc_MediaParsedChanged"]
+    #[doc = " event. However if the media was already parsed you will not receive this"]
+    #[doc = " event."]
+    #[doc = ""]
+    #[doc = " \\deprecated You can't be sure to receive the libvlc_MediaParsedChanged"]
+    #[doc = "             event (you can wait indefinitely for this event)."]
+    #[doc = "             Use libvlc_media_parse_with_options() instead"]
+    #[doc = ""]
+    #[doc = " \\see libvlc_media_parse"]
+    #[doc = " \\see libvlc_MediaParsedChanged"]
+    #[doc = " \\see libvlc_media_get_meta"]
+    #[doc = " \\see libvlc_media_get_tracks_info"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
     pub fn libvlc_media_parse_async(p_md: *mut libvlc_media_t);
 }
 extern "C" {
+    #[doc = " Return true is the media descriptor object is parsed"]
+    #[doc = ""]
+    #[doc = " \\deprecated This can return true in case of failure."]
+    #[doc = "             Use libvlc_media_get_parsed_status() instead"]
+    #[doc = ""]
+    #[doc = " \\see libvlc_MediaParsedChanged"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\return true if media object has been parsed otherwise it returns false"]
+    #[doc = ""]
+    #[doc = " \\libvlc_return_bool"]
     pub fn libvlc_media_is_parsed(p_md: *mut libvlc_media_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Get media descriptor's elementary streams description"]
+    #[doc = ""]
+    #[doc = " Note, you need to call libvlc_media_parse() or play the media at least once"]
+    #[doc = " before calling this function."]
+    #[doc = " Not doing this will result in an empty array."]
+    #[doc = ""]
+    #[doc = " \\deprecated Use libvlc_media_tracks_get() instead"]
+    #[doc = ""]
+    #[doc = " \\param p_md media descriptor object"]
+    #[doc = " \\param tracks address to store an allocated array of Elementary Streams"]
+    #[doc = "        descriptions (must be freed by the caller) [OUT]"]
+    #[doc = ""]
+    #[doc = " \\return the number of Elementary Streams"]
     pub fn libvlc_media_get_tracks_info(
         p_md: *mut libvlc_media_t,
         tracks: *mut *mut libvlc_media_track_info_t,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " \\ingroup libvlc libvlc_media_list"]
+    #[doc = " @{"]
     pub fn libvlc_media_list_add_file_content(
         p_ml: *mut libvlc_media_list_t,
         psz_uri: *const libc::c_char,
     ) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " \\deprecated Use libvlc_media_discoverer_new() and libvlc_media_discoverer_start()."]
     pub fn libvlc_media_discoverer_new_from_name(
         p_inst: *mut libvlc_instance_t,
         psz_name: *const libc::c_char,
     ) -> *mut libvlc_media_discoverer_t;
 }
 extern "C" {
+    #[doc = " Get media service discover object its localized name."]
+    #[doc = ""]
+    #[doc = " \\deprecated Useless, use libvlc_media_discoverer_list_get() to get the"]
+    #[doc = " longname of the service discovery."]
+    #[doc = ""]
+    #[doc = " \\param p_mdis media discover object"]
+    #[doc = " \\return localized name or NULL if the media_discoverer is not started"]
     pub fn libvlc_media_discoverer_localized_name(
         p_mdis: *mut libvlc_media_discoverer_t,
     ) -> *mut libc::c_char;
 }
 extern "C" {
+    #[doc = " Get event manager from media service discover object."]
+    #[doc = ""]
+    #[doc = " \\deprecated Useless, media_discoverer events are only triggered when calling"]
+    #[doc = " libvlc_media_discoverer_start() and libvlc_media_discoverer_stop()."]
+    #[doc = ""]
+    #[doc = " \\param p_mdis media service discover object"]
+    #[doc = " \\return event manager object."]
     pub fn libvlc_media_discoverer_event_manager(
         p_mdis: *mut libvlc_media_discoverer_t,
     ) -> *mut libvlc_event_manager_t;
 }
 extern "C" {
+    #[doc = " Waits until an interface causes the instance to exit."]
+    #[doc = " You should start at least one interface first, using libvlc_add_intf()."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the instance"]
+    #[doc = " \\warning This function wastes one thread doing basically nothing."]
+    #[doc = " libvlc_set_exit_handler() should be used instead."]
     pub fn libvlc_wait(p_instance: *mut libvlc_instance_t);
 }
 #[repr(C)]
@@ -5581,39 +8322,96 @@ fn bindgen_test_layout_libvlc_log_message_t() {
     );
 }
 extern "C" {
+    #[doc = " Always returns minus one."]
+    #[doc = " This function is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_instance ignored"]
+    #[doc = " \\return always -1"]
     pub fn libvlc_get_log_verbosity(p_instance: *const libvlc_instance_t) -> libc::c_uint;
 }
 extern "C" {
+    #[doc = " This function does nothing."]
+    #[doc = " It is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_instance ignored"]
+    #[doc = " \\param level ignored"]
     pub fn libvlc_set_log_verbosity(p_instance: *mut libvlc_instance_t, level: libc::c_uint);
 }
 extern "C" {
+    #[doc = " This function does nothing useful."]
+    #[doc = " It is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_instance libvlc instance"]
+    #[doc = " \\return an unique pointer or NULL on error"]
     pub fn libvlc_log_open(p_instance: *mut libvlc_instance_t) -> *mut libvlc_log_t;
 }
 extern "C" {
+    #[doc = " Frees memory allocated by libvlc_log_open()."]
+    #[doc = ""]
+    #[doc = " \\param p_log libvlc log instance or NULL"]
     pub fn libvlc_log_close(p_log: *mut libvlc_log_t);
 }
 extern "C" {
+    #[doc = " Always returns zero."]
+    #[doc = " This function is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_log ignored"]
+    #[doc = " \\return always zero"]
     pub fn libvlc_log_count(p_log: *const libvlc_log_t) -> libc::c_uint;
 }
 extern "C" {
+    #[doc = " This function does nothing."]
+    #[doc = " It is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_log ignored"]
     pub fn libvlc_log_clear(p_log: *mut libvlc_log_t);
 }
 extern "C" {
+    #[doc = " This function does nothing useful."]
+    #[doc = " It is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_log ignored"]
+    #[doc = " \\return an unique pointer or NULL on error or if the parameter was NULL"]
     pub fn libvlc_log_get_iterator(p_log: *const libvlc_log_t) -> *mut libvlc_log_iterator_t;
 }
 extern "C" {
+    #[doc = " Frees memory allocated by libvlc_log_get_iterator()."]
+    #[doc = ""]
+    #[doc = " \\param p_iter libvlc log iterator or NULL"]
     pub fn libvlc_log_iterator_free(p_iter: *mut libvlc_log_iterator_t);
 }
 extern "C" {
+    #[doc = " Always returns zero."]
+    #[doc = " This function is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_iter ignored"]
+    #[doc = " \\return always zero"]
     pub fn libvlc_log_iterator_has_next(p_iter: *const libvlc_log_iterator_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Always returns NULL."]
+    #[doc = " This function is only provided for backward compatibility."]
+    #[doc = ""]
+    #[doc = " \\param p_iter libvlc log iterator or NULL"]
+    #[doc = " \\param p_buf ignored"]
+    #[doc = " \\return always NULL"]
     pub fn libvlc_log_iterator_next(
         p_iter: *mut libvlc_log_iterator_t,
         p_buf: *mut libvlc_log_message_t,
     ) -> *mut libvlc_log_message_t;
 }
 extern "C" {
+    #[doc = " Start playing (if there is any item in the playlist)."]
+    #[doc = ""]
+    #[doc = " Additionnal playlist item options can be specified for addition to the"]
+    #[doc = " item before it is played."]
+    #[doc = ""]
+    #[doc = " \\param p_instance the playlist instance"]
+    #[doc = " \\param i_id the item to play. If this is a negative number, the next"]
+    #[doc = "        item will be selected. Otherwise, the item with the given ID will be"]
+    #[doc = "        played"]
+    #[doc = " \\param i_options the number of options to add to the item"]
+    #[doc = " \\param ppsz_options the options to add to the item"]
     pub fn libvlc_playlist_play(
         p_instance: *mut libvlc_instance_t,
         i_id: libc::c_int,
