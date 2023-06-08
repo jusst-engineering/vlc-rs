@@ -145,6 +145,7 @@ define_enum!(
     MediaPlayerLengthChanged = libvlc_event_e_libvlc_MediaPlayerLengthChanged,
     MediaPlayerVout = libvlc_event_e_libvlc_MediaPlayerVout,
     MediaPlayerScrambledChanged = libvlc_event_e_libvlc_MediaPlayerScrambledChanged,
+    MediaPlayerTeletextChanged = libvlc_event_e_libvlc_MediaPlayerTeletextActivePageChanged,
     MediaListItemAdded = libvlc_event_e_libvlc_MediaListItemAdded,
     MediaListWillAddItem = libvlc_event_e_libvlc_MediaListWillAddItem,
     MediaListItemDeleted = libvlc_event_e_libvlc_MediaListItemDeleted,

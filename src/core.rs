@@ -287,6 +287,7 @@ pub enum Event {
     MediaPlayerLengthChanged,
     MediaPlayerVout,
     MediaPlayerScrambledChanged,
+    MediaPlayerTeletextChanged(i32),
 
     MediaListItemAdded,
     MediaListWillAddItem,
@@ -460,6 +461,11 @@ fn conv_event(pe: *const sys::libvlc_event_t) -> Event {
         },
         EventType::MediaPlayerScrambledChanged => {
             Event::MediaPlayerScrambledChanged
+        },
+        EventType::MediaPlayerTeletextChanged => {
+            unsafe {
+                Event::MediaPlayerTeletextChanged((*pe).u.media_player_teletext_active_page_changed.page)
+            }
         },
         EventType::MediaListItemAdded => {
             Event::MediaListItemAdded
