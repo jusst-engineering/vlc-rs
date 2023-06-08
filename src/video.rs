@@ -52,6 +52,14 @@ pub trait MediaPlayerVideoEx {
     ///            Also supports the values of TeletextKey enum for following special links.
     fn set_teletext(&self, page: u32);
 
+    /// Set the teletext background mode.
+    ///
+    /// # Arguments
+    ///
+    /// * `opaque` - If `true` an opaque background is rendered behind teletext pages, otherwise
+    ///              the background will be transparent.
+    fn set_teletext_opaque(&self, opaque: bool);
+
     /// Configure a message to show as marquee on top of the video.
     ///
     /// # Arguments
@@ -251,6 +259,12 @@ impl MediaPlayerVideoEx for MediaPlayer {
     fn set_teletext(&self, page: u32) {
         unsafe {
             sys::libvlc_video_set_teletext(self.ptr, page as i32);
+        }
+    }
+
+    fn set_teletext_opaque(&self, opaque: bool) {
+        unsafe {
+            sys::libvlc_video_set_teletext_opaque(self.ptr, opaque);
         }
     }
 
