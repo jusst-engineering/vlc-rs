@@ -4270,6 +4270,13 @@ extern "C" {
     pub fn libvlc_video_get_teletext_active(p_mi: *mut libvlc_media_player_t) -> libc::c_int;
 }
 extern "C" {
+    #[doc = " Set the background rendering mode of teletext pages."]
+    #[doc = ""]
+    #[doc = " \\param p_mi the media player"]
+    #[doc = " \\param opque When `true`, render an opaque background, else make it transparent."]
+    pub fn libvlc_video_set_teletext_opaque(p_mi: *mut libvlc_media_player_t, opaque: bool);
+}
+extern "C" {
     #[doc = " Set new teletext page to retrieve."]
     #[doc = ""]
     #[doc = " This function can also be used to send a teletext key."]
