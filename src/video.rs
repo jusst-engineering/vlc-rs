@@ -35,8 +35,11 @@ pub trait MediaPlayerVideoEx {
     fn get_spu_track(&self) -> Option<i32>;
     fn set_spu_track(&self, track: i32);
 
-    /// Get the current teletext page.
+    /// Get the requested teletext page.
     fn get_teletext(&self) -> i32;
+
+    /// Get the currently showing teletext page.
+    fn get_teletext_active(&self) -> i32;
 
     /// Set the teletext page to display.
     ///
@@ -239,6 +242,10 @@ impl MediaPlayerVideoEx for MediaPlayer {
 
     fn get_teletext(&self) -> i32 {
         unsafe { sys::libvlc_video_get_teletext(self.ptr) }
+    }
+
+    fn get_teletext_active(&self) -> i32 {
+        unsafe { sys::libvlc_video_get_teletext_active(self.ptr) }
     }
 
     fn set_teletext(&self, page: u32) {
