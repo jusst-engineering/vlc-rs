@@ -180,3 +180,10 @@ define_enum!(
     Blue = libvlc_teletext_key_t_libvlc_teletext_key_blue,
     Index = libvlc_teletext_key_t_libvlc_teletext_key_index,
 );
+
+define_enum!(
+    PlaybackMode, libvlc_playback_mode_t;
+    Default = libvlc_playback_mode_t_libvlc_playback_mode_default,
+    Loop = libvlc_playback_mode_t_libvlc_playback_mode_loop,
+    Repeat = libvlc_playback_mode_t_libvlc_playback_mode_repeat,
+);
