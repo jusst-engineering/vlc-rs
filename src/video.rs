@@ -72,6 +72,15 @@ pub trait MediaPlayerVideoEx {
         x: Option<i32>,
         y: Option<i32>,
     );
+
+    /// Set deinterlacing mode.
+    ///
+    /// # Arguments
+    ///
+    /// * `mode` - If `Some`, the name of the deinterlacing mode to load, if `None` deinterlacing
+    ///            is disabled.
+    ///            Supported modes depend on the vlc configuration.
+    fn set_deinterlace(&self, mode: Option<&str>);
 }
 
 impl MediaPlayerVideoEx for MediaPlayer {
@@ -314,6 +323,18 @@ impl MediaPlayerVideoEx for MediaPlayer {
                     sys::libvlc_video_marquee_option_t_libvlc_marquee_Enable,
                     0,
                 );
+            }
+        }
+    }
+
+    fn set_deinterlace(&self, mode: Option<&str>) {
+        if let Some(mode) = mode {
+            unsafe {
+                sys::libvlc_video_set_deinterlace(self.ptr, to_cstr(mode).as_ptr());
+            }
+        } else {
+            unsafe {
+                sys::libvlc_video_set_deinterlace(self.ptr, ::std::ptr::null());
             }
         }
     }
