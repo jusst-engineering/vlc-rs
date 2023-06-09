@@ -9,6 +9,8 @@ pub struct MediaList {
     pub(crate) ptr: *mut sys::libvlc_media_list_t,
 }
 
+unsafe impl Send for MediaList{}
+
 impl MediaList {
     /// Create an empty media list.
     pub fn new(instance: &Instance) -> Option<MediaList> {
