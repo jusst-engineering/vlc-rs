@@ -188,7 +188,7 @@ impl MediaPlayerVideoEx for MediaPlayer {
             let mut td = Vec::new();
             let mut p = p0;
 
-            while !(*p).p_next.is_null() {
+            while !p.is_null() {
                 td.push(TrackDescription {
                     id: (*p).i_id,
                     name: from_cstr((*p).psz_name),
@@ -226,7 +226,7 @@ impl MediaPlayerVideoEx for MediaPlayer {
             let mut track_vector = Vec::new();
             let mut track = tracks;
 
-            while !(*track).p_next.is_null() {
+            while !track.is_null() {
                 track_vector.push(TrackDescription {
                     id: (*track).i_id,
                     name: from_cstr((*track).psz_name),
