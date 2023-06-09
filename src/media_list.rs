@@ -27,51 +27,72 @@ impl MediaList {
     }
 
     /// Get media instance from this media list instance.
-    /// The MediaList::lock should NOT be held upon entering this function.
     pub fn media(&self) -> Option<Media> {
-        unsafe{
+        self.lock();
+        let result = unsafe{
             let p = sys::libvlc_media_list_media(self.ptr);
             if p.is_null() { None }else{ Some(Media{ptr: p}) }
-        }
+        };
+        self.unlock();
+
+        result
     }
 
     /// Add media instance to media list.
-    /// The MediaList::lock should be held upon entering this function.
     pub fn add_media(&self, md: &Media) -> Result<(), ()> {
-        unsafe{
+        self.lock();
+        let result = unsafe{
             if sys::libvlc_media_list_add_media(self.ptr, md.ptr) == 0 { Ok(()) }else{ Err(()) }
-        }
+        };
+        self.unlock();
+
+        result
     }
 
     /// Insert media instance in media list on a position.
-    /// The MediaList::lock should be held upon entering this function.
     pub fn insert_media(&self, md: &Media, pos: i32) -> Result<(), ()> {
-        unsafe{
+        self.lock();
+        let result = unsafe{
             if sys::libvlc_media_list_insert_media(self.ptr, md.ptr, pos) == 0 { Ok(()) }else{ Err(()) }
-        }
+        };
+        self.unlock();
+
+        result
     }
 
     /// Remove media instance from media list on a position.
-    /// The MediaList::lock should be held upon entering this function.
     pub fn remove_index(&self, pos: i32) -> Result<(), ()> {
-        unsafe{
+        self.lock();
+        let result = unsafe{
             if sys::libvlc_media_list_remove_index(self.ptr, pos) == 0 { Ok(()) }else{ Err(()) }
-        }
+        };
+        self.unlock();
+
+        result
+
     }
 
     /// Get count on media list items.
-    /// The MediaList::lock should be held upon entering this function.
     pub fn count(&self) -> i32 {
-        unsafe{ sys::libvlc_media_list_count(self.ptr) }
+        self.lock();
+        let result = unsafe{ sys::libvlc_media_list_count(self.ptr) };
+        self.unlock();
+
+        result
+
     }
 
     /// List media instance in media list at a position.
-    /// The MediaList::lock should be held upon entering this function.
     pub fn item_at_index(&self, pos: i32) -> Option<Media> {
-        unsafe{
+        self.lock();
+        let result = unsafe{
             let p = sys::libvlc_media_list_item_at_index(self.ptr, pos);
             if p.is_null() { None }else{ Some(Media{ptr: p}) }
-        }
+        };
+        self.unlock();
+
+        result
+
     }
 
     /// Find index position of List media instance in media list.
@@ -88,13 +109,13 @@ impl MediaList {
     }
 
     /// Get lock on media list items
-    pub fn lock(&self) {
+    fn lock(&self) {
         unsafe{ sys::libvlc_media_list_lock(self.ptr); }
     }
 
     /// Release lock on media list items
     /// The libvlc_media_list_lock should be held upon entering this function.
-    pub fn unlock(&self) {
+    fn unlock(&self) {
         unsafe{ sys::libvlc_media_list_unlock(self.ptr); }
     }
 
