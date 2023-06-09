@@ -55,11 +55,12 @@ impl MediaPlayerAudioEx for MediaPlayer {
             let mut td = Vec::new();
             let mut p = p0;
 
-            while !(*p).p_next.is_null() {
+            while !p.is_null() {
                 td.push(TrackDescription {
                     id: (*p).i_id,
                     name: from_cstr((*p).psz_name),
                 });
+
                 p = (*p).p_next;
             }
             sys::libvlc_track_description_list_release(p0);
