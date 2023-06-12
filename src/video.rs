@@ -73,6 +73,20 @@ pub trait MediaPlayerVideoEx {
         y: Option<i32>,
     );
 
+    /// Set the marquee text color.
+    ///
+    /// # Arguments
+    ///
+    /// * `color` - A RGB value as `(r << 16 | g << 16 | b)` with `r`, `g`, `b` being u8 each.
+    fn set_marquee_color(&self, color: i32);
+
+    /// Set the marquee text opacity.
+    ///
+    /// # Arguments
+    ///
+    /// * `opacity` - The opacity as u8, 0 being fully transparent, 255 being fully opaque.
+    fn set_marquee_opacity(&self, opacity: u8);
+
     /// Set deinterlacing mode.
     ///
     /// # Arguments
@@ -324,6 +338,26 @@ impl MediaPlayerVideoEx for MediaPlayer {
                     0,
                 );
             }
+        }
+    }
+
+    fn set_marquee_color(&self, color: i32) {
+        unsafe {
+            sys::libvlc_video_set_marquee_int(
+                self.ptr,
+                sys::libvlc_video_marquee_option_t_libvlc_marquee_Color,
+                color,
+            );
+        }
+    }
+
+    fn set_marquee_opacity(&self, opacity: u8) {
+        unsafe {
+            sys::libvlc_video_set_marquee_int(
+                self.ptr,
+                sys::libvlc_video_marquee_option_t_libvlc_marquee_Opacity,
+                opacity as i32,
+            );
         }
     }
 
