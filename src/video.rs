@@ -6,8 +6,7 @@ use std::time::Duration;
 
 use crate::enums::VideoAdjustOption;
 use crate::tools::{from_cstr, to_cstr};
-use crate::MediaPlayer;
-use crate::TrackDescription;
+use crate::{MediaPlayer, TrackType};
 use libc::c_void;
 use vlc_sys as sys;
 
@@ -18,20 +17,16 @@ pub trait MediaPlayerVideoEx {
     fn set_key_input(&self, on: bool);
     fn set_mouse_input(&self, on: bool);
     fn get_size(&self, num: u32) -> Option<(u32, u32)>;
-    fn get_video_track(&self) -> Option<i32>;
-    fn set_video_track(&self, track: i32);
     fn get_cursor(&self, num: u32) -> Option<(i32, i32)>;
     fn get_scale(&self) -> f32;
     fn set_scale(&self, factor: f32);
     fn get_aspect_ratio(&self) -> Option<String>;
     fn set_aspect_ratio(&self, aspect: Option<&str>);
-    fn get_video_track_description(&self) -> Option<Vec<TrackDescription>>;
     fn get_adjust_int(&self, option: VideoAdjustOption) -> i32;
     fn set_adjust_int(&self, option: VideoAdjustOption, value: i32);
     fn get_adjust_float(&self, option: VideoAdjustOption) -> f32;
     fn set_adjust_float(&self, option: VideoAdjustOption, value: f32);
 
-    fn get_spu_track_description(&self) -> Option<Vec<TrackDescription>>;
     fn get_spu_track(&self) -> Option<i32>;
     fn set_spu_track(&self, track: i32);
 
@@ -91,10 +86,11 @@ pub trait MediaPlayerVideoEx {
     ///
     /// # Arguments
     ///
+    /// * `deinterlace` - `-1`: auto, `0`: disabled, `1`: enabled
     /// * `mode` - If `Some`, the name of the deinterlacing mode to load, if `None` deinterlacing
     ///            is disabled.
     ///            Supported modes depend on the vlc configuration.
-    fn set_deinterlace(&self, mode: Option<&str>);
+    fn set_deinterlace(&self, deinterlace: i32, mode: Option<&str>);
 }
 
 impl MediaPlayerVideoEx for MediaPlayer {
@@ -105,17 +101,11 @@ impl MediaPlayerVideoEx for MediaPlayer {
     }
     fn set_fullscreen(&self, fullscreen: bool) {
         unsafe {
-            sys::libvlc_set_fullscreen(self.ptr, if fullscreen { 1 } else { 0 });
+            sys::libvlc_set_fullscreen(self.ptr, fullscreen);
         }
     }
     fn get_fullscreen(&self) -> bool {
-        unsafe {
-            if sys::libvlc_get_fullscreen(self.ptr) == 0 {
-                false
-            } else {
-                true
-            }
-        }
+        unsafe { sys::libvlc_get_fullscreen(self.ptr) }
     }
     fn set_key_input(&self, on: bool) {
         unsafe {
@@ -159,21 +149,6 @@ impl MediaPlayerVideoEx for MediaPlayer {
             sys::libvlc_video_set_scale(self.ptr, factor);
         }
     }
-    fn get_video_track(&self) -> Option<i32> {
-        unsafe {
-            let track = sys::libvlc_video_get_track(self.ptr);
-            if track == -1 {
-                None
-            } else {
-                Some(track)
-            }
-        }
-    }
-    fn set_video_track(&self, track: i32) {
-        unsafe {
-            sys::libvlc_video_set_track(self.ptr, track);
-        }
-    }
     fn get_aspect_ratio(&self) -> Option<String> {
         unsafe {
             let p = sys::libvlc_video_get_aspect_ratio(self.ptr);
@@ -193,26 +168,6 @@ impl MediaPlayerVideoEx for MediaPlayer {
             }
         }
     }
-    fn get_video_track_description(&self) -> Option<Vec<TrackDescription>> {
-        unsafe {
-            let p0 = sys::libvlc_video_get_track_description(self.ptr);
-            if p0.is_null() {
-                return None;
-            }
-            let mut td = Vec::new();
-            let mut p = p0;
-
-            while !p.is_null() {
-                td.push(TrackDescription {
-                    id: (*p).i_id,
-                    name: from_cstr((*p).psz_name),
-                });
-                p = (*p).p_next;
-            }
-            sys::libvlc_track_description_list_release(p0);
-            Some(td)
-        }
-    }
     fn get_adjust_int(&self, option: VideoAdjustOption) -> i32 {
         unsafe { sys::libvlc_video_get_adjust_int(self.ptr, option as u32) }
     }
@@ -230,44 +185,35 @@ impl MediaPlayerVideoEx for MediaPlayer {
         }
     }
 
-    fn get_spu_track_description(&self) -> Option<Vec<TrackDescription>> {
-        unsafe {
-            let tracks = sys::libvlc_video_get_spu_description(self.ptr);
-            if tracks.is_null() {
-                return None;
-            }
-
-            let mut track_vector = Vec::new();
-            let mut track = tracks;
-
-            while !track.is_null() {
-                track_vector.push(TrackDescription {
-                    id: (*track).i_id,
-                    name: from_cstr((*track).psz_name),
-                });
-
-                track = (*track).p_next;
-            }
-
-            sys::libvlc_track_description_release(tracks);
-            Some(track_vector)
-        }
-    }
-
     fn get_spu_track(&self) -> Option<i32> {
         unsafe {
-            let track = sys::libvlc_video_get_spu(self.ptr);
-            if track == -1 {
-                None
+            let track =
+                sys::libvlc_media_player_get_selected_track(self.ptr, TrackType::Text as i32);
+            if !track.is_null() {
+                let i_id = (*track).i_id;
+                sys::libvlc_media_track_release(track);
+                Some(i_id)
             } else {
-                Some(track)
+                None
             }
         }
     }
 
     fn set_spu_track(&self, track: i32) {
         unsafe {
-            sys::libvlc_video_set_spu(self.ptr, track);
+            sys::libvlc_media_player_unselect_track_type(self.ptr, TrackType::Text as i32);
+            let tracklist =
+                sys::libvlc_media_player_get_tracklist(self.ptr, TrackType::Text as i32, false);
+
+            for i in 0..sys::libvlc_media_tracklist_count(tracklist) {
+                let p_track = sys::libvlc_media_tracklist_at(tracklist, i);
+                if (*p_track).i_id == track {
+                    sys::libvlc_media_player_select_track(self.ptr, p_track);
+                    break;
+                }
+            }
+
+            sys::libvlc_media_tracklist_delete(tracklist);
         }
     }
 
@@ -287,7 +233,7 @@ impl MediaPlayerVideoEx for MediaPlayer {
 
     fn set_teletext_opaque(&self, opaque: bool) {
         unsafe {
-            sys::libvlc_video_set_teletext_opaque(self.ptr, opaque);
+            sys::libvlc_video_set_teletext_transparency(self.ptr, opaque);
         }
     }
 
@@ -361,14 +307,14 @@ impl MediaPlayerVideoEx for MediaPlayer {
         }
     }
 
-    fn set_deinterlace(&self, mode: Option<&str>) {
+    fn set_deinterlace(&self, deinterlace: i32, mode: Option<&str>) {
         if let Some(mode) = mode {
             unsafe {
-                sys::libvlc_video_set_deinterlace(self.ptr, to_cstr(mode).as_ptr());
+                sys::libvlc_video_set_deinterlace(self.ptr, deinterlace, to_cstr(mode).as_ptr());
             }
         } else {
             unsafe {
-                sys::libvlc_video_set_deinterlace(self.ptr, ::std::ptr::null());
+                sys::libvlc_video_set_deinterlace(self.ptr, deinterlace, ::std::ptr::null());
             }
         }
     }

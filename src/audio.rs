@@ -2,9 +2,8 @@
 // This file is part of vlc-rs.
 // Licensed under the MIT license, see the LICENSE file.
 
-use crate::tools::from_cstr;
 use crate::MediaPlayer;
-use crate::TrackDescription;
+use crate::TrackType;
 use vlc_sys as sys;
 
 pub trait MediaPlayerAudioEx {
@@ -12,7 +11,6 @@ pub trait MediaPlayerAudioEx {
     fn set_mute(&self, muted: bool);
     fn get_volume(&self) -> i32;
     fn set_volume(&self, volume: i32) -> Result<(), ()>;
-    fn get_audio_track_description(&self) -> Option<Vec<TrackDescription>>;
     fn get_audio_track(&self) -> Option<i32>;
     fn set_audio_track(&self, track: i32);
 }
@@ -46,40 +44,32 @@ impl MediaPlayerAudioEx for MediaPlayer {
             }
         }
     }
-    fn get_audio_track_description(&self) -> Option<Vec<TrackDescription>> {
-        unsafe {
-            let p0 = sys::libvlc_audio_get_track_description(self.ptr);
-            if p0.is_null() {
-                return None;
-            }
-            let mut td = Vec::new();
-            let mut p = p0;
-
-            while !p.is_null() {
-                td.push(TrackDescription {
-                    id: (*p).i_id,
-                    name: from_cstr((*p).psz_name),
-                });
-
-                p = (*p).p_next;
-            }
-            sys::libvlc_track_description_list_release(p0);
-            Some(td)
-        }
-    }
     fn get_audio_track(&self) -> Option<i32> {
         unsafe {
-            let track = sys::libvlc_audio_get_track(self.ptr);
-            if track == -1 {
-                None
+            let track = sys::libvlc_media_player_get_selected_track(self.ptr, TrackType::Audio as i32);
+            if !track.is_null() {
+                let i_id =(*track).i_id;
+                sys::libvlc_media_track_release(track);
+                Some(i_id)
             } else {
-                Some(track)
+                None
             }
         }
     }
     fn set_audio_track(&self, track: i32) {
         unsafe {
-            sys::libvlc_audio_set_track(self.ptr, track);
+            sys::libvlc_media_player_unselect_track_type(self.ptr, TrackType::Audio as i32);
+            let tracklist = sys::libvlc_media_player_get_tracklist(self.ptr, TrackType::Audio as i32, false);
+
+            for i in 0..sys::libvlc_media_tracklist_count(tracklist) {
+                let p_track = sys::libvlc_media_tracklist_at(tracklist, i);
+                if (*p_track).i_id == track {
+                    sys::libvlc_media_player_select_track(self.ptr, p_track);
+                    break;
+                }
+            }
+
+            sys::libvlc_media_tracklist_delete(tracklist);
         }
     }
 }

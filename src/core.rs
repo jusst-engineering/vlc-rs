@@ -2,34 +2,37 @@
 // This file is part of vlc-rs.
 // Licensed under the MIT license, see the LICENSE file.
 
-use std::ptr;
+use crate::enums::*;
+use crate::tools::{from_cstr, from_cstr_ref, to_cstr};
+use libc::{c_char, c_int, c_void};
 use std::borrow::Cow;
-use std::marker::PhantomData;
+use std::convert::TryInto;
 use std::ffi::CString;
 use std::i32;
-use std::convert::TryInto;
-use libc::{c_void, c_char, c_int};
+use std::marker::PhantomData;
+use std::ptr;
 use vlc_sys as sys;
-use crate::tools::{to_cstr, from_cstr, from_cstr_ref};
-use crate::enums::*;
 
 /// Retrieve libvlc version.
 pub fn version() -> String {
-    unsafe{
-        from_cstr_ref(sys::libvlc_get_version()).unwrap().into_owned()
+    unsafe {
+        from_cstr_ref(sys::libvlc_get_version())
+            .unwrap()
+            .into_owned()
     }
 }
 
 /// Retrieve libvlc compiler version.
 pub fn compiler() -> String {
-    unsafe{
-        from_cstr_ref(sys::libvlc_get_compiler()).unwrap().into_owned()
+    unsafe {
+        from_cstr_ref(sys::libvlc_get_compiler())
+            .unwrap()
+            .into_owned()
     }
 }
 
 pub struct Instance {
     pub(crate) ptr: *mut sys::libvlc_instance_t,
-
 }
 
 unsafe impl Send for Instance {}
@@ -39,18 +42,19 @@ impl Instance {
     /// Note: args.len() has to be less or equal to i32::MAX
     /// Note: libvlc discourages using arguments as these are not guaranteed to be stable between different versions of libvlc
     pub fn with_args(args: Option<Vec<String>>) -> Option<Instance> {
-        let args_c_ptr: Vec<*const c_char> ;
+        let args_c_ptr: Vec<*const c_char>;
         let args_c: Vec<CString>;
         if let Some(argv) = args {
-            args_c = argv.into_iter()
-                .map(|x| CString::new(x).expect("Error: Unexpected null byte")).collect();
+            args_c = argv
+                .into_iter()
+                .map(|x| CString::new(x).expect("Error: Unexpected null byte"))
+                .collect();
             args_c_ptr = args_c.iter().map(|x| x.as_ptr()).collect();
         } else {
             args_c_ptr = Vec::new();
         }
 
-
-        unsafe{
+        unsafe {
             let p = if args_c_ptr.is_empty() {
                 sys::libvlc_new(0, ptr::null())
             } else {
@@ -61,7 +65,7 @@ impl Instance {
                 return None;
             }
 
-            Some(Instance{ptr: p})
+            Some(Instance { ptr: p })
         }
     }
 
@@ -70,64 +74,47 @@ impl Instance {
         Instance::with_args(None)
     }
 
-    /// Try to start a user interface for the libvlc instance.
-    pub fn add_intf(&self, name: &str) -> Result<(), ()> {
-        let cstr = to_cstr(name);
-
-        let result = unsafe{
-            sys::libvlc_add_intf(self.ptr, cstr.as_ptr())
-        };
-
-        if result == 0 { Ok(()) }
-        else { Err(()) }
-    }
-
     /// Sets the application name.
     /// LibVLC passes this as the user agent string when a protocol requires it.
     pub fn set_user_agent(&self, name: &str, http: &str) {
-        unsafe{
-            sys::libvlc_set_user_agent(
-                self.ptr, to_cstr(name).as_ptr(), to_cstr(http).as_ptr());
+        unsafe {
+            sys::libvlc_set_user_agent(self.ptr, to_cstr(name).as_ptr(), to_cstr(http).as_ptr());
         }
-    }
-
-    /// Waits until an interface causes the instance to exit.
-    pub fn wait(&self) {
-        unsafe{ sys::libvlc_wait(self.ptr) };
     }
 
     /// Sets some meta-information about the application.
     pub fn set_app_id(&self, id: &str, version: &str, icon: &str) {
-        unsafe{
+        unsafe {
             sys::libvlc_set_app_id(
-                self.ptr, to_cstr(id).as_ptr(), to_cstr(version).as_ptr(), to_cstr(icon).as_ptr());
+                self.ptr,
+                to_cstr(id).as_ptr(),
+                to_cstr(version).as_ptr(),
+                to_cstr(icon).as_ptr(),
+            );
         }
     }
 
     /// Returns a list of audio filters that are available.
     pub fn audio_filter_list_get(&self) -> Option<ModuleDescriptionList> {
-        unsafe{
+        unsafe {
             let p = sys::libvlc_audio_filter_list_get(self.ptr);
-            if p.is_null() { None }
-            else { Some(ModuleDescriptionList{ptr: p}) }
+            if p.is_null() {
+                None
+            } else {
+                Some(ModuleDescriptionList { ptr: p })
+            }
         }
     }
 
     /// Returns a list of video filters that are available.
     pub fn video_filter_list_get(&self) -> Option<ModuleDescriptionList> {
-        unsafe{
+        unsafe {
             let p = sys::libvlc_video_filter_list_get(self.ptr);
-            if p.is_null() { None }
-            else { Some(ModuleDescriptionList{ptr: p}) }
-        }
-    }
-
-    /// Returns the VLM event manager
-    pub fn vlm_event_manager<'a>(&'a self) -> EventManager<'a> {
-        unsafe{
-            let p = sys::libvlc_vlm_get_event_manager(self.ptr);
-            assert!(!p.is_null());
-            EventManager{ptr: p, _phantomdata: ::std::marker::PhantomData}
+            if p.is_null() {
+                None
+            } else {
+                Some(ModuleDescriptionList { ptr: p })
+            }
         }
     }
 
@@ -135,7 +122,7 @@ impl Instance {
     pub fn set_log<F: Fn(LogLevel, Log, Cow<str>) + Send + 'static>(&self, f: F) {
         let cb: Box<Box<dyn Fn(LogLevel, Log, Cow<str>) + Send + 'static>> = Box::new(Box::new(f));
 
-        unsafe{
+        unsafe {
             sys::libvlc_log_set(self.ptr, Some(logging_cb), Box::into_raw(cb) as *mut _);
         }
     }
@@ -148,7 +135,7 @@ impl Instance {
 
 impl Drop for Instance {
     fn drop(&mut self) {
-        unsafe{
+        unsafe {
             sys::libvlc_release(self.ptr);
         }
     }
@@ -156,14 +143,22 @@ impl Drop for Instance {
 
 const BUF_SIZE: usize = 1024; // Write log message to the buffer by vsnprintf.
 unsafe extern "C" fn logging_cb(
-    data: *mut c_void, level: c_int, ctx: *const sys::libvlc_log_t, fmt: *const c_char, args: *mut sys::__va_list_tag) {
-
+    data: *mut c_void,
+    level: c_int,
+    ctx: *const sys::libvlc_log_t,
+    fmt: *const c_char,
+    args: *mut sys::__va_list_tag,
+) {
     let f: &Box<dyn Fn(LogLevel, Log, Cow<str>) + Send + 'static> = ::std::mem::transmute(data);
     let mut buf: [c_char; BUF_SIZE] = [0; BUF_SIZE];
 
     sys::vsnprintf(buf.as_mut_ptr(), BUF_SIZE.try_into().unwrap(), fmt, args);
 
-    f((level as u32).into(), Log{ptr: ctx}, from_cstr_ref(buf.as_ptr()).unwrap());
+    f(
+        (level as u32).into(),
+        Log { ptr: ctx },
+        from_cstr_ref(buf.as_ptr()).unwrap(),
+    );
 }
 
 /// List of module description.
@@ -180,7 +175,7 @@ impl ModuleDescriptionList {
 
 impl Drop for ModuleDescriptionList {
     fn drop(&mut self) {
-        unsafe{ sys::libvlc_module_description_list_release(self.ptr) };
+        unsafe { sys::libvlc_module_description_list_release(self.ptr) };
     }
 }
 
@@ -189,7 +184,10 @@ impl<'a> IntoIterator for &'a ModuleDescriptionList {
     type IntoIter = ModuleDescriptionListIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        ModuleDescriptionListIter{ptr: self.ptr, _phantomdata: PhantomData}
+        ModuleDescriptionListIter {
+            ptr: self.ptr,
+            _phantomdata: PhantomData,
+        }
     }
 }
 
@@ -202,36 +200,36 @@ pub struct ModuleDescriptionListIter<'a> {
 /// The strings are owned.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ModuleDescription {
-    pub name:      Option<String>,
+    pub name: Option<String>,
     pub shortname: Option<String>,
-    pub longname:  Option<String>,
-    pub help:      Option<String>,
+    pub longname: Option<String>,
+    pub help: Option<String>,
 }
 
 /// Description of a module.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ModuleDescriptionRef<'a> {
-    pub name:      Option<Cow<'a, str>>,
+    pub name: Option<Cow<'a, str>>,
     pub shortname: Option<Cow<'a, str>>,
-    pub longname:  Option<Cow<'a, str>>,
-    pub help:      Option<Cow<'a, str>>,
+    pub longname: Option<Cow<'a, str>>,
+    pub help: Option<Cow<'a, str>>,
 }
 
 impl<'a> Iterator for ModuleDescriptionListIter<'a> {
     type Item = ModuleDescriptionRef<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        unsafe{
+        unsafe {
             if self.ptr.is_null() {
                 return None;
             }
             let p = self.ptr;
             self.ptr = (*p).p_next;
-            Some(ModuleDescriptionRef{
-                name:      from_cstr_ref((*p).psz_name),
+            Some(ModuleDescriptionRef {
+                name: from_cstr_ref((*p).psz_name),
                 shortname: from_cstr_ref((*p).psz_shortname),
-                longname:  from_cstr_ref((*p).psz_longname),
-                help:      from_cstr_ref((*p).psz_help),
+                longname: from_cstr_ref((*p).psz_longname),
+                help: from_cstr_ref((*p).psz_help),
             })
         }
     }
@@ -241,20 +239,56 @@ impl<'a> ModuleDescriptionRef<'a> {
     /// Convert to owned strings.
     pub fn into_owned(&'a self) -> ModuleDescription {
         ModuleDescription {
-            name:      self.name     .as_ref().map(|s| s.clone().into_owned()),
+            name: self.name.as_ref().map(|s| s.clone().into_owned()),
             shortname: self.shortname.as_ref().map(|s| s.clone().into_owned()),
-            longname:  self.name     .as_ref().map(|s| s.clone().into_owned()),
-            help:      self.shortname.as_ref().map(|s| s.clone().into_owned()),
+            longname: self.name.as_ref().map(|s| s.clone().into_owned()),
+            help: self.shortname.as_ref().map(|s| s.clone().into_owned()),
         }
     }
 }
 
 pub fn errmsg() -> Option<String> {
-    unsafe{ from_cstr(sys::libvlc_errmsg()) }
+    unsafe { from_cstr(sys::libvlc_errmsg()) }
 }
 
 pub fn clearerr() {
-    unsafe{ sys::libvlc_clearerr() };
+    unsafe { sys::libvlc_clearerr() };
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct EsChanged {
+    i_type: i32,
+    psz_id: Option<String>,
+}
+
+impl EsChanged {
+    unsafe fn from_event(pe: *const sys::libvlc_event_t) -> Self {
+        unsafe {
+            EsChanged {
+                i_type: (*pe).u.media_player_es_changed.i_type,
+                psz_id: from_cstr((*pe).u.media_player_es_changed.psz_id),
+            }
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct TitleDescription {
+    duration: i64,
+    psz_name: Option<String>,
+    flags: u32,
+    index: i32,
+}
+
+impl TitleDescription {
+    unsafe fn from_event(pe: *const sys::libvlc_event_t) -> Self {
+        TitleDescription {
+            duration: (*(*pe).u.media_player_title_selection_changed.title).i_duration,
+            psz_name: from_cstr((*(*pe).u.media_player_title_selection_changed.title).psz_name),
+            flags: (*(*pe).u.media_player_title_selection_changed.title).i_flags,
+            index: (*pe).u.media_player_title_selection_changed.index,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -279,18 +313,13 @@ pub enum Event {
     MediaPlayerEndReached,
     MediaPlayerEncounteredError,
     MediaPlayerTimeChanged,
-    MediaPlayerPositionChanged(f32),
+    MediaPlayerPositionChanged(f64),
     MediaPlayerSeekableChanged,
     MediaPlayerPausableChanged,
-    MediaPlayerTitleChanged,
     MediaPlayerSnapshotTaken,
     MediaPlayerLengthChanged,
     MediaPlayerVout,
-    MediaPlayerScrambledChanged,
-    MediaPlayerTeletextChanged(i32),
-
-    MediaListItemAdded,
-    MediaListWillAddItem,
+    //MediaPlayerTeletextChanged(i32),
     MediaListItemDeleted,
     MediaListWillDeleteItem,
 
@@ -306,17 +335,39 @@ pub enum Event {
     MediaDiscovererStarted,
     MediaDiscovererEnded,
 
-    VlmMediaAdded(Option<String>, Option<String>),
-    VlmMediaRemoved(Option<String>, Option<String>),
-    VlmMediaChanged(Option<String>, Option<String>),
-    VlmMediaInstanceStarted(Option<String>, Option<String>),
-    VlmMediaInstanceStopped(Option<String>, Option<String>),
-    VlmMediaInstanceStatusInit(Option<String>, Option<String>),
-    VlmMediaInstanceStatusOpening(Option<String>, Option<String>),
-    VlmMediaInstanceStatusPlaying(Option<String>, Option<String>),
-    VlmMediaInstanceStatusPause(Option<String>, Option<String>),
-    VlmMediaInstanceStatusEnd(Option<String>, Option<String>),
-    VlmMediaInstanceStatusError(Option<String>, Option<String>)
+    MediaThumbnailGenerated,
+    MediaAttachedThumbnailsFound,
+    MediaPlayerStopping,
+    MediaPlayerESAdded(EsChanged),
+    MediaPlayerESDeleted(EsChanged),
+    MediaPlayerESSelected {
+        i_type: i32,
+        psz_selected_id: Option<String>,
+        psz_unselected_id: Option<String>,
+    },
+    MediaPlayerCorked,
+    MediaPlayerUncorked,
+    MediaPlayerMuted,
+    MediaPlayerUnmuted,
+    MediaPlayerAudioVolume(f32),
+    MediaPlayerAudioDevice(Option<String>),
+    MediaPlayerESUpdated(EsChanged),
+    MediaPlayerProgramAdded(i32),
+    MediaPlayerProgramDeleted(i32),
+    MediaPlayerProgramSelected(i32),
+    MediaPlayerProgramUpdated(i32),
+    MediaPlayerTitleListChanged,
+    MediaPlayerTitleSelectionChanged(TitleDescription),
+    MediaPlayerChapterChanged(i32),
+    MediaPlayerRecordChanged,
+    MediaPlayerTeletextPageChanged(i32),
+    MediaPlayerTeletextActivePageChanged(i32),
+    MediaListItemAdded,
+    MediaListWillAddItem,
+    MediaListEndReached,
+    RendererDiscovererItemAdded,
+    RendererDiscovererItemDeleted,
+    MediaPlayerMediaStopping,
 }
 
 pub struct EventManager<'a> {
@@ -326,11 +377,19 @@ pub struct EventManager<'a> {
 
 impl<'a> EventManager<'a> {
     pub fn detach(&self, event_type: EventType, registered_callback: *mut c_void) {
-        unsafe { sys::libvlc_event_detach(self.ptr, event_type as i32, Some(event_manager_callback), registered_callback) }
+        unsafe {
+            sys::libvlc_event_detach(
+                self.ptr,
+                event_type as i32,
+                Some(event_manager_callback),
+                registered_callback,
+            )
+        }
     }
 
     pub fn attach<F>(&self, event_type: EventType, callback: F) -> Result<*mut c_void, ()>
-        where F: Fn(Event, VLCObject) + Send + 'static
+    where
+        F: Fn(Event, VLCObject) + Send + 'static,
     {
         // Explicit type annotation is needed
         let callback: Box<Box<dyn Fn(Event, VLCObject) + Send + 'static>> =
@@ -338,15 +397,18 @@ impl<'a> EventManager<'a> {
 
         let raw = Box::into_raw(callback) as *mut c_void;
 
-        let result = unsafe{
+        let result = unsafe {
             sys::libvlc_event_attach(
-                self.ptr, event_type as i32, Some(event_manager_callback),
-                raw)
+                self.ptr,
+                event_type as i32,
+                Some(event_manager_callback),
+                raw,
+            )
         };
 
         if result == 0 {
             Ok(raw)
-        }else{
+        } else {
             Err(())
         }
     }
@@ -360,207 +422,124 @@ impl<'a> EventManager<'a> {
 unsafe extern "C" fn event_manager_callback(pe: *const sys::libvlc_event_t, data: *mut c_void) {
     let f: &Box<dyn Fn(Event, VLCObject) + Send + 'static> = ::std::mem::transmute(data);
 
-    f(conv_event(pe), VLCObject{ ptr: (*pe).p_obj });
+    f(conv_event(pe), VLCObject { ptr: (*pe).p_obj });
 }
 
 // Convert c-style libvlc_event_t to Event
 fn conv_event(pe: *const sys::libvlc_event_t) -> Event {
-    let event_type: EventType = (unsafe{ (*pe).type_ } as u32).into();
+    let event_type: EventType = (unsafe { (*pe).type_ } as u32).into();
 
     match event_type {
-        EventType::MediaMetaChanged => {
-            unsafe{
-                Event::MediaMetaChanged((*pe).u.media_meta_changed.meta_type.into())
+        EventType::MediaMetaChanged => unsafe {
+            Event::MediaMetaChanged((*pe).u.media_meta_changed.meta_type.into())
+        },
+        EventType::MediaSubItemAdded => Event::MediaSubItemAdded,
+        EventType::MediaDurationChanged => unsafe {
+            Event::MediaDurationChanged((*pe).u.media_duration_changed.new_duration)
+        },
+        EventType::MediaParsedChanged => unsafe {
+            Event::MediaParsedChanged((*pe).u.media_parsed_changed.new_status)
+        },
+        EventType::MediaSubItemTreeAdded => Event::MediaSubItemTreeAdded,
+        EventType::MediaPlayerMediaChanged => Event::MediaPlayerMediaChanged,
+        EventType::MediaPlayerNothingSpecial => Event::MediaPlayerNothingSpecial,
+        EventType::MediaPlayerOpening => Event::MediaPlayerOpening,
+        EventType::MediaPlayerBuffering => unsafe {
+            Event::MediaPlayerBuffering((*pe).u.media_player_buffering.new_cache)
+        },
+        EventType::MediaPlayerPlaying => Event::MediaPlayerPlaying,
+        EventType::MediaPlayerPaused => Event::MediaPlayerPaused,
+        EventType::MediaPlayerStopped => Event::MediaPlayerStopped,
+        EventType::MediaPlayerForward => Event::MediaPlayerForward,
+        EventType::MediaPlayerBackward => Event::MediaPlayerBackward,
+        EventType::MediaPlayerEncounteredError => Event::MediaPlayerEncounteredError,
+        EventType::MediaPlayerTimeChanged => Event::MediaPlayerTimeChanged,
+        EventType::MediaPlayerPositionChanged => unsafe {
+            Event::MediaPlayerPositionChanged((*pe).u.media_player_position_changed.new_position)
+        },
+        EventType::MediaPlayerSeekableChanged => Event::MediaPlayerSeekableChanged,
+        EventType::MediaPlayerPausableChanged => Event::MediaPlayerPausableChanged,
+        EventType::MediaPlayerSnapshotTaken => Event::MediaPlayerSnapshotTaken,
+        EventType::MediaPlayerLengthChanged => Event::MediaPlayerLengthChanged,
+        EventType::MediaPlayerVout => Event::MediaPlayerVout,
+        EventType::MediaPlayerTeletextPageChanged => unsafe {
+            Event::MediaPlayerTeletextPageChanged(
+                (*pe).u.media_player_teletext_page_changed.page,
+            )
+        },
+        EventType::MediaPlayerTeletextActivePageChanged => unsafe {
+            Event::MediaPlayerTeletextActivePageChanged(
+                (*pe).u.media_player_teletext_page_changed.page,
+            )
+        },
+        EventType::MediaListItemDeleted => Event::MediaListItemDeleted,
+        EventType::MediaListWillDeleteItem => Event::MediaListWillDeleteItem,
+        EventType::MediaListViewItemAdded => Event::MediaListViewItemAdded,
+        EventType::MediaListViewWillAddItem => Event::MediaListViewWillAddItem,
+        EventType::MediaListViewItemDeleted => Event::MediaListViewItemDeleted,
+        EventType::MediaListViewWillDeleteItem => Event::MediaListViewWillDeleteItem,
+        EventType::MediaListPlayerPlayed => Event::MediaListPlayerPlayed,
+        EventType::MediaListPlayerNextItemSet => Event::MediaListPlayerNextItemSet,
+        EventType::MediaListPlayerStopped => Event::MediaListPlayerStopped,
+        EventType::MediaThumbnailGenerated => Event::MediaThumbnailGenerated,
+        EventType::MediaAttachedThumbnailsFound => Event::MediaAttachedThumbnailsFound,
+        EventType::MediaPlayerStopping => Event::MediaPlayerStopping,
+        EventType::MediaPlayerESAdded => unsafe {
+            Event::MediaPlayerESAdded(EsChanged::from_event(pe))
+        },
+        EventType::MediaPlayerESDeleted => unsafe {
+            Event::MediaPlayerESDeleted(EsChanged::from_event(pe))
+        },
+        EventType::MediaPlayerESSelected => unsafe {
+            Event::MediaPlayerESSelected {
+                i_type: (*pe).u.media_player_es_selection_changed.i_type,
+                psz_selected_id: from_cstr(
+                    (*pe).u.media_player_es_selection_changed.psz_selected_id,
+                ),
+                psz_unselected_id: from_cstr(
+                    (*pe).u.media_player_es_selection_changed.psz_unselected_id,
+                ),
             }
         },
-        EventType::MediaSubItemAdded => {
-            Event::MediaSubItemAdded
+        EventType::MediaPlayerCorked => Event::MediaPlayerCorked,
+        EventType::MediaPlayerUncorked => Event::MediaPlayerUncorked,
+        EventType::MediaPlayerMuted => Event::MediaPlayerMuted,
+        EventType::MediaPlayerUnmuted => Event::MediaPlayerUnmuted,
+        EventType::MediaPlayerAudioVolume => unsafe {
+            Event::MediaPlayerAudioVolume((*pe).u.media_player_audio_volume.volume)
         },
-        EventType::MediaDurationChanged => {
-            unsafe{
-                Event::MediaDurationChanged((*pe).u.media_duration_changed.new_duration)
-            }
+        EventType::MediaPlayerAudioDevice => unsafe {
+            Event::MediaPlayerAudioDevice(from_cstr((*pe).u.media_player_audio_device.device))
         },
-        EventType::MediaParsedChanged => {
-            unsafe{
-                Event::MediaParsedChanged((*pe).u.media_parsed_changed.new_status)
-            }
+        EventType::MediaPlayerESUpdated => unsafe {
+            Event::MediaPlayerESUpdated(EsChanged::from_event(pe))
         },
-        EventType::MediaFreed => {
-            Event::MediaFreed
+        EventType::MediaPlayerProgramAdded => unsafe {
+            Event::MediaPlayerProgramAdded((*pe).u.media_player_program_changed.i_id)
         },
-        EventType::MediaStateChanged => {
-            unsafe{
-                let new_state: sys::libvlc_state_t = (*pe).u.media_state_changed.new_state.try_into().unwrap();
-                Event::MediaStateChanged(new_state.into())
-            }
+        EventType::MediaPlayerProgramDeleted => unsafe {
+            Event::MediaPlayerProgramDeleted((*pe).u.media_player_program_changed.i_id)
         },
-        EventType::MediaSubItemTreeAdded => {
-            Event::MediaSubItemTreeAdded
+        EventType::MediaPlayerProgramSelected => unsafe {
+            Event::MediaPlayerProgramSelected((*pe).u.media_player_program_changed.i_id)
         },
-        EventType::MediaPlayerMediaChanged => {
-            Event::MediaPlayerMediaChanged
+        EventType::MediaPlayerProgramUpdated => unsafe {
+            Event::MediaPlayerProgramUpdated((*pe).u.media_player_program_changed.i_id)
         },
-        EventType::MediaPlayerNothingSpecial => {
-            Event::MediaPlayerNothingSpecial
+        EventType::MediaPlayerTitleListChanged => Event::MediaPlayerTitleListChanged,
+        EventType::MediaPlayerTitleSelectionChanged => unsafe {
+            Event::MediaPlayerTitleSelectionChanged(TitleDescription::from_event(pe))
         },
-        EventType::MediaPlayerOpening => {
-            Event::MediaPlayerOpening
+        EventType::MediaPlayerChapterChanged => unsafe {
+            Event::MediaPlayerChapterChanged((*pe).u.media_player_chapter_changed.new_chapter)
         },
-        EventType::MediaPlayerBuffering => {
-            unsafe{
-                Event::MediaPlayerBuffering((*pe).u.media_player_buffering.new_cache)
-            }
-        },
-        EventType::MediaPlayerPlaying => {
-            Event::MediaPlayerPlaying
-        },
-        EventType::MediaPlayerPaused => {
-            Event::MediaPlayerPaused
-        },
-        EventType::MediaPlayerStopped => {
-            Event::MediaPlayerStopped
-        },
-        EventType::MediaPlayerForward => {
-            Event::MediaPlayerForward
-        },
-        EventType::MediaPlayerBackward => {
-            Event::MediaPlayerBackward
-        },
-        EventType::MediaPlayerEndReached => {
-            Event::MediaPlayerEndReached
-        },
-        EventType::MediaPlayerEncounteredError => {
-            Event::MediaPlayerEncounteredError
-        },
-        EventType::MediaPlayerTimeChanged => {
-            Event::MediaPlayerTimeChanged
-        },
-        EventType::MediaPlayerPositionChanged => {
-            unsafe{
-                Event::MediaPlayerPositionChanged((*pe).u.media_player_position_changed.new_position)
-            }
-        },
-        EventType::MediaPlayerSeekableChanged => {
-            Event::MediaPlayerSeekableChanged
-        },
-        EventType::MediaPlayerPausableChanged => {
-            Event::MediaPlayerPausableChanged
-        },
-        EventType::MediaPlayerTitleChanged => {
-            Event::MediaPlayerTitleChanged
-        },
-        EventType::MediaPlayerSnapshotTaken => {
-            Event::MediaPlayerSnapshotTaken
-        },
-        EventType::MediaPlayerLengthChanged => {
-            Event::MediaPlayerLengthChanged
-        },
-        EventType::MediaPlayerVout => {
-            Event::MediaPlayerVout
-        },
-        EventType::MediaPlayerScrambledChanged => {
-            Event::MediaPlayerScrambledChanged
-        },
-        EventType::MediaPlayerTeletextChanged => {
-            unsafe {
-                Event::MediaPlayerTeletextChanged((*pe).u.media_player_teletext_active_page_changed.page)
-            }
-        },
-        EventType::MediaListItemAdded => {
-            Event::MediaListItemAdded
-        },
-        EventType::MediaListWillAddItem => {
-            Event::MediaListWillAddItem
-        },
-        EventType::MediaListItemDeleted => {
-            Event::MediaListItemDeleted
-        },
-        EventType::MediaListWillDeleteItem => {
-            Event::MediaListWillDeleteItem
-        },
-        EventType::MediaListViewItemAdded => {
-            Event::MediaListViewItemAdded
-        },
-        EventType::MediaListViewWillAddItem => {
-            Event::MediaListViewWillAddItem
-        },
-        EventType::MediaListViewItemDeleted => {
-            Event::MediaListViewItemDeleted
-        },
-        EventType::MediaListViewWillDeleteItem => {
-            Event::MediaListViewWillDeleteItem
-        },
-        EventType::MediaListPlayerPlayed => {
-            Event::MediaListPlayerPlayed
-        },
-        EventType::MediaListPlayerNextItemSet => {
-            Event::MediaListPlayerNextItemSet
-        },
-        EventType::MediaListPlayerStopped => {
-            Event::MediaListPlayerStopped
-        },
-        EventType::MediaDiscovererStarted => {
-            Event::MediaDiscovererStarted
-        },
-        EventType::MediaDiscovererEnded => {
-            Event::MediaDiscovererEnded
-        },
-        EventType::VlmMediaAdded => {
-            unsafe {
-                Event::VlmMediaAdded(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaRemoved => {
-            unsafe {
-                Event::VlmMediaRemoved(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaChanged => {
-            unsafe {
-                Event::VlmMediaChanged(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStarted => {
-            unsafe {
-                Event::VlmMediaInstanceStarted(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStopped => {
-            unsafe {
-                Event::VlmMediaInstanceStopped(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStatusInit => {
-            unsafe {
-                Event::VlmMediaInstanceStatusInit(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStatusOpening => {
-            unsafe {
-                Event::VlmMediaInstanceStatusOpening(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStatusPlaying => {
-            unsafe {
-                Event::VlmMediaInstanceStatusPlaying(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStatusPause => {
-            unsafe {
-                Event::VlmMediaInstanceStatusPause(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStatusEnd => {
-            unsafe {
-                Event::VlmMediaInstanceStatusEnd(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
-        EventType::VlmMediaInstanceStatusError => {
-            unsafe {
-                Event::VlmMediaInstanceStatusError(from_cstr((*pe).u.vlm_media_event.psz_instance_name), from_cstr((*pe).u.vlm_media_event.psz_media_name))
-            }
-        },
+        EventType::MediaPlayerRecordChanged => Event::MediaPlayerRecordChanged,
+        EventType::MediaListItemAdded => Event::MediaListItemAdded,
+        EventType::MediaListWillAddItem => Event::MediaListWillAddItem,
+        EventType::MediaListEndReached => Event::MediaListEndReached,
+        EventType::RendererDiscovererItemAdded => Event::RendererDiscovererItemAdded,
+        EventType::RendererDiscovererItemDeleted => Event::RendererDiscovererItemDeleted,
+        EventType::MediaPlayerMediaStopping => Event::MediaPlayerMediaStopping,
     }
 }
 
@@ -576,7 +555,7 @@ impl VLCObject {
 }
 
 pub struct Log {
-    pub(crate) ptr: *const sys::libvlc_log_t
+    pub(crate) ptr: *const sys::libvlc_log_t,
 }
 
 impl Log {
@@ -585,4 +564,3 @@ impl Log {
         self.ptr
     }
 }
-

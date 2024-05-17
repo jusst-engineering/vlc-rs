@@ -13,10 +13,10 @@ fn generate_bindings() {
         // Use libc
         .ctypes_prefix("libc")
         // Whitelist
-        .whitelist_type(".*vlc.*")
-        .whitelist_function(".*vlc.*")
-        .whitelist_var(".*vlc.*")
-        .whitelist_function("vsnprintf")
+        .allowlist_type(".*vlc.*")
+        .allowlist_function(".*vlc.*")
+        .allowlist_var(".*vlc.*")
+        .allowlist_function("vsnprintf")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks));
 
     // Set header include paths

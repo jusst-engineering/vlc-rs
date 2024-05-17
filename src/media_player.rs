@@ -3,9 +3,16 @@
 // Licensed under the MIT license, see the LICENSE file.
 
 use vlc_sys as sys;
+use crate::tools::from_cstr;
+use crate::AudioTrack;
 use crate::Instance;
 use crate::Media;
 use crate::EventManager;
+use crate::MediaTrack;
+use crate::MediaTrackUnion;
+use crate::SubtitleTrack;
+use crate::TrackType;
+use crate::VideoTrack;
 use libc::{c_void, c_uint};
 use crate::enums::{State, Position};
 use std::mem::transmute;
@@ -56,7 +63,7 @@ impl MediaPlayer {
 
     /// is_playing
     pub fn is_playing(&self) -> bool {
-        if unsafe{ sys::libvlc_media_player_is_playing(self.ptr) } == 0 {
+        if unsafe{ sys::libvlc_media_player_is_playing(self.ptr) } == false {
             false
         }else{
             true
@@ -84,7 +91,7 @@ impl MediaPlayer {
 
     /// Stop (no effect if there is no media)
     pub fn stop(&self) {
-        unsafe{ sys::libvlc_media_player_stop(self.ptr) };
+        unsafe{ sys::libvlc_media_player_stop_async(self.ptr) };
     }
 
     pub fn set_callbacks<F>(
@@ -102,8 +109,8 @@ impl MediaPlayer {
         let flag_drain = drain.is_some();
 
         let data = AudioCallbacksData {
-            play: Box::new(play), pause: pause, resume: resume,
-            flush: flush, drain: drain,
+            play: Box::new(play), pause, resume,
+            flush, drain,
         };
         let data = Box::into_raw(Box::new(data));
 
@@ -163,22 +170,22 @@ impl MediaPlayer {
 
     /// Set the movie time (in ms).
     /// This has no effect if no media is being played. Not all formats and protocols support this.
-    pub fn set_time(&self, time: i64) {
-        unsafe{ sys::libvlc_media_player_set_time(self.ptr, time); }
+    pub fn set_time(&self, time: i64, fast: bool) {
+        unsafe{ sys::libvlc_media_player_set_time(self.ptr, time, fast); }
     }
 
     /// Get movie position as percentage between 0.0 and 1.0.
-    pub fn get_position(&self) -> Option<f32> {
+    pub fn get_position(&self) -> Option<f64> {
         unsafe{
             let pos = sys::libvlc_media_player_get_position(self.ptr);
-            if pos == -1f32 { None }else{ Some(pos) }
+            if pos == -1f64 { None }else{ Some(pos) }
         }
     }
 
     /// Set movie position as percentage between 0.0 and 1.0.
     /// This has no effect if playback is not enabled. This might not work depending on the underlying input format and protocol.
-    pub fn set_position(&self, pos: f32) {
-        unsafe{ sys::libvlc_media_player_set_position(self.ptr, pos); }
+    pub fn set_position(&self, pos: f64, fast: bool) {
+        unsafe{ sys::libvlc_media_player_set_position(self.ptr, pos, fast); }
     }
 
     /// Set movie chapter (if applicable).
@@ -199,14 +206,6 @@ impl MediaPlayer {
         unsafe{
             let c = sys::libvlc_media_player_get_chapter_count(self.ptr);
             if c == -1 { None }else{ Some(c) }
-        }
-    }
-
-    /// Is the player able to play.
-    pub fn will_play(&self) -> bool {
-        unsafe{
-            let b = sys::libvlc_media_player_will_play(self.ptr);
-            if b == 0 { false }else{ true }
         }
     }
 
@@ -278,24 +277,21 @@ impl MediaPlayer {
     /// Is this media player seekable?
     pub fn is_seekable(&self) -> bool {
         unsafe{
-            let b = sys::libvlc_media_player_is_seekable(self.ptr);
-            if b == 0 { false }else{ true }
+            sys::libvlc_media_player_is_seekable(self.ptr)
         }
     }
 
     /// Can this media player be paused?
     pub fn can_pause(&self) -> bool {
         unsafe{
-            let b = sys::libvlc_media_player_can_pause(self.ptr);
-            if b == 0 { false }else{ true }
+            sys::libvlc_media_player_can_pause(self.ptr)
         }
     }
 
     /// Check if the current program is scrambled.
     pub fn program_scrambled(&self) -> bool {
         unsafe{
-            let b = sys::libvlc_media_player_program_scrambled(self.ptr);
-            if b == 0 { false }else{ true }
+            sys::libvlc_media_player_program_scrambled(self.ptr)
         }
     }
 
@@ -313,6 +309,72 @@ impl MediaPlayer {
     pub fn set_video_title_display(&self, position: Position, timeout: u32) {
         unsafe{ sys::libvlc_media_player_set_video_title_display(self.ptr, position as i32, timeout); }
     }
+
+    pub fn tracks(&self) -> Option<Vec<MediaTrack>> {
+        let track_types = [
+            sys::libvlc_track_type_t_libvlc_track_audio,
+            sys::libvlc_track_type_t_libvlc_track_video,
+            sys::libvlc_track_type_t_libvlc_track_text,
+            sys::libvlc_track_type_t_libvlc_track_unknown,
+        ];
+        let mut track = Vec::new();
+
+        for track_type in track_types.iter() {
+            unsafe {
+                let tracklist = sys::libvlc_media_player_get_tracklist(self.ptr, *track_type, false);
+
+                for i in 0..sys::libvlc_media_tracklist_count(tracklist) {
+                    let p_track = sys::libvlc_media_tracklist_at(tracklist, i);
+                    let i_type: TrackType = (*p_track).i_type.into();
+
+                    let type_specific_data = match i_type {
+                        TrackType::Audio => {
+                            let audio = (*p_track).__bindgen_anon_1.audio;
+                            MediaTrackUnion::Audio(AudioTrack {
+                                channels: (*audio).i_channels,
+                                rate: (*audio).i_rate,
+                            })
+                        }
+                        TrackType::Video => {
+                            let video = (*p_track).__bindgen_anon_1.video;
+                            MediaTrackUnion::Video(VideoTrack {
+                                height: (*video).i_height,
+                                width: (*video).i_width,
+                                sar_num: (*video).i_sar_num,
+                                sar_den: (*video).i_sar_den,
+                                frame_rate_num: (*video).i_frame_rate_num,
+                                frame_rate_den: (*video).i_frame_rate_den,
+                            })
+                        }
+                        TrackType::Text => {
+                            let subtitle = (*p_track).__bindgen_anon_1.subtitle;
+                            MediaTrackUnion::Subtitle(SubtitleTrack {
+                                encoding: from_cstr((*subtitle).psz_encoding),
+                            })
+                        }
+                        TrackType::Unknown => MediaTrackUnion::None,
+                    };
+                    track.push(MediaTrack {
+                        codec: (*p_track).i_codec,
+                        original_fourcc: (*p_track).i_original_fourcc,
+                        id: (*p_track).i_id,
+                        track_type: (*p_track).i_type.into(),
+                        profile: (*p_track).i_profile,
+                        level: (*p_track).i_level,
+                        bitrate: (*p_track).i_bitrate,
+                        language: from_cstr((*p_track).psz_language),
+                        description: from_cstr((*p_track).psz_description),
+                        type_specific_data,
+                    });
+                }
+
+                sys::libvlc_media_tracklist_delete(tracklist);
+            }
+        }
+
+        Some(track)
+    }
+
 
     /// Returns raw pointer
     pub fn raw(&self) -> *mut sys::libvlc_media_player_t {

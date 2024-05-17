@@ -53,10 +53,7 @@ impl MediaListPlayer {
     /// Whether the list is currently playing
     pub fn is_playing(&self) -> bool {
         unsafe {
-            match sys::libvlc_media_list_player_is_playing(self.ptr) {
-                1 => true,
-                _ => false,
-            }
+            sys::libvlc_media_list_player_is_playing(self.ptr)
         }
     }
 
@@ -72,7 +69,7 @@ impl MediaListPlayer {
 
     /// Stop media playback
     pub fn stop(&self) {
-        unsafe { sys::libvlc_media_list_player_stop(self.ptr) }
+        unsafe { sys::libvlc_media_list_player_stop_async(self.ptr) }
     }
 
     /// Skip to next media in list

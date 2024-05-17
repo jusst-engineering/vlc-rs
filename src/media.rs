@@ -2,7 +2,7 @@
 // This file is part of vlc-rs.
 // Licensed under the MIT license, see the LICENSE file.
 
-use crate::enums::{Meta, State, TrackType};
+use crate::enums::{Meta, TrackType};
 use crate::tools::{from_cstr, path_to_cstr, to_cstr};
 use crate::{EventManager, Instance};
 use std::path::Path;
@@ -16,11 +16,11 @@ unsafe impl Send for Media {}
 
 impl Media {
     /// Create a media with a certain given media resource location, for instance a valid URL.
-    pub fn new_location(instance: &Instance, mrl: &str) -> Option<Media> {
+    pub fn new_location(mrl: &str) -> Option<Media> {
         let cstr = to_cstr(mrl);
 
         unsafe {
-            let p = sys::libvlc_media_new_location(instance.ptr, cstr.as_ptr());
+            let p = sys::libvlc_media_new_location(cstr.as_ptr());
             if p.is_null() {
                 return None;
             }
@@ -30,7 +30,7 @@ impl Media {
     }
 
     /// Create a media for a certain file path.
-    pub fn new_path<T: AsRef<Path>>(instance: &Instance, path: T) -> Option<Media> {
+    pub fn new_path<T: AsRef<Path>>(path: T) -> Option<Media> {
         let cstr = match path_to_cstr(path.as_ref()) {
             Ok(s) => s,
             Err(_) => {
@@ -39,7 +39,7 @@ impl Media {
         };
 
         unsafe {
-            let p = sys::libvlc_media_new_path(instance.ptr, cstr.as_ptr());
+            let p = sys::libvlc_media_new_path(cstr.as_ptr());
             if p.is_null() {
                 return None;
             }
@@ -48,9 +48,9 @@ impl Media {
         }
     }
 
-    pub fn new_fd(instance: &Instance, fd: i32) -> Option<Media> {
+    pub fn new_fd(fd: i32) -> Option<Media> {
         unsafe {
-            let p = sys::libvlc_media_new_fd(instance.ptr, fd);
+            let p = sys::libvlc_media_new_fd(fd);
             if p.is_null() {
                 return None;
             }
@@ -99,17 +99,12 @@ impl Media {
     }
 
     /// Save the meta previously set.
-    pub fn save_meta(&self) -> bool {
-        if unsafe { sys::libvlc_media_save_meta(self.ptr) } == 0 {
+    pub fn save_meta(&self, instance: &Instance) -> bool {
+        if unsafe { sys::libvlc_media_save_meta(instance.ptr, self.ptr) } == 0 {
             false
         } else {
             true
         }
-    }
-
-    /// Get current state of media descriptor object.
-    pub fn state(&self) -> State {
-        unsafe { sys::libvlc_media_get_state(self.ptr).into() }
     }
 
     /// Get duration (in ms) of media descriptor object item.
@@ -119,84 +114,6 @@ impl Media {
             Some(time)
         } else {
             None
-        }
-    }
-
-    /// Parse a media.
-    pub fn parse(&self) {
-        unsafe { sys::libvlc_media_parse(self.ptr) };
-    }
-
-    /// Parse a media.
-    pub fn parse_async(&self) {
-        unsafe { sys::libvlc_media_parse_async(self.ptr) };
-    }
-
-    /// Get Parsed status for media descriptor object.
-    pub fn is_parsed(&self) -> bool {
-        if unsafe { sys::libvlc_media_is_parsed(self.ptr) } == 0 {
-            false
-        } else {
-            true
-        }
-    }
-
-    pub fn tracks(&self) -> Option<Vec<MediaTrack>> {
-        unsafe {
-            let mut p_track: *mut *mut sys::libvlc_media_track_t = ::std::ptr::null_mut();
-            let n = sys::libvlc_media_tracks_get(self.ptr, &mut p_track);
-            if n == 0 {
-                return None;
-            }
-
-            let mut track = Vec::new();
-
-            for i in 0..n {
-                let p = p_track.offset(i as isize);
-                let i_type: TrackType = (**p).i_type.into();
-                let type_specific_data = match i_type {
-                    TrackType::Audio => {
-                        let audio = (**p).__bindgen_anon_1.audio;
-                        MediaTrackUnion::Audio(AudioTrack {
-                            channels: (*audio).i_channels,
-                            rate: (*audio).i_rate,
-                        })
-                    }
-                    TrackType::Video => {
-                        let video = (**p).__bindgen_anon_1.video;
-                        MediaTrackUnion::Video(VideoTrack {
-                            height: (*video).i_height,
-                            width: (*video).i_width,
-                            sar_num: (*video).i_sar_num,
-                            sar_den: (*video).i_sar_den,
-                            frame_rate_num: (*video).i_frame_rate_num,
-                            frame_rate_den: (*video).i_frame_rate_den,
-                        })
-                    }
-                    TrackType::Text => {
-                        let subtitle = (**p).__bindgen_anon_1.subtitle;
-                        MediaTrackUnion::Subtitle(SubtitleTrack {
-                            encoding: from_cstr((*subtitle).psz_encoding),
-                        })
-                    }
-                    TrackType::Unknown => MediaTrackUnion::None,
-                };
-                track.push(MediaTrack {
-                    codec: (**p).i_codec,
-                    original_fourcc: (**p).i_original_fourcc,
-                    id: (**p).i_id,
-                    track_type: (**p).i_type.into(),
-                    profile: (**p).i_profile,
-                    level: (**p).i_level,
-                    bitrate: (**p).i_bitrate,
-                    language: from_cstr((**p).psz_language),
-                    description: from_cstr((**p).psz_description),
-                    type_specific_data,
-                });
-            }
-
-            sys::libvlc_media_tracks_release(p_track, n);
-            Some(track)
         }
     }
 
@@ -216,13 +133,11 @@ impl Media {
                 i_lost_pictures: 0,
                 i_played_abuffers: 0,
                 i_lost_abuffers: 0,
-                i_sent_packets: 0,
-                i_sent_bytes: 0,
-                f_send_bitrate: 0.0,
+                i_late_pictures: 0,
             };
 
-            let n = sys::libvlc_media_get_stats(self.ptr, &mut p_stats);
-            if n == 0 {
+            let ok = sys::libvlc_media_get_stats(self.ptr, &mut p_stats);
+            if !ok {
                 return None;
             }
 
@@ -239,9 +154,7 @@ impl Media {
                 lost_pictures: p_stats.i_lost_pictures,
                 played_abuffers: p_stats.i_played_abuffers,
                 lost_abuffers: p_stats.i_lost_abuffers,
-                sent_packets: p_stats.i_sent_packets,
-                sent_bytes: p_stats.i_sent_bytes,
-                send_bitrate: p_stats.f_send_bitrate,
+                late_pictures: p_stats.i_late_pictures,
             })
         }
     }
@@ -303,19 +216,17 @@ pub struct SubtitleTrack {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct MediaStats {
-    pub read_bytes: i32,
+    pub read_bytes: u64,
     pub input_bitrate: f32,
-    pub demux_read_bytes: i32,
+    pub demux_read_bytes: u64,
     pub demux_bitrate: f32,
-    pub demux_corrupted: i32,
-    pub demux_discontinuity: i32,
-    pub decoded_video: i32,
-    pub decoded_audio: i32,
-    pub displayed_pictures: i32,
-    pub lost_pictures: i32,
-    pub played_abuffers: i32,
-    pub lost_abuffers: i32,
-    pub sent_packets: i32,
-    pub sent_bytes: i32,
-    pub send_bitrate: f32,
+    pub demux_corrupted: u64,
+    pub demux_discontinuity: u64,
+    pub decoded_video: u64,
+    pub decoded_audio: u64,
+    pub displayed_pictures: u64,
+    pub lost_pictures: u64,
+    pub played_abuffers: u64,
+    pub lost_abuffers: u64,
+    pub late_pictures: u64,
 }
