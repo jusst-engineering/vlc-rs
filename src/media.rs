@@ -79,6 +79,13 @@ impl Media {
         }
     }
 
+    /// Add an option to the media
+    pub fn add_option(&self, psz_options: &str) {
+        unsafe {
+            sys::libvlc_media_add_option(self.ptr, to_cstr(psz_options).as_ptr());
+        }
+    }
+
     /// Read the meta of the media.
     /// If the media has not yet been parsed this will return None.
     pub fn get_meta(&self, meta: Meta) -> Option<String> {
